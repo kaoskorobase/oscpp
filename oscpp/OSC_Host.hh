@@ -25,31 +25,70 @@
 #define OSC_HOST_HH_INCLUDED
 
 #if !defined(OSC_HOST_BIG_ENDIAN) && !defined(OSC_HOST_LITTLE_ENDIAN)
-# error One of OSC_HOST_BIG_ENDIAN or OSC_HOST_LITTLE_ENDIAN must be defined!
-#endif
-#if defined(OSC_HOST_BIG_ENDIAN) && defined(OSC_HOST_LITTLE_ENDIAN)
-# error Only one of OSC_HOST_BIG_ENDIAN or OSC_HOST_LITTLE_ENDIAN can be defined!
+#   if defined(_WINDOWS_)
+#       define OSC_HOST_LITTLE_ENDIAN
+        namespace OSC
+        {
+            inline static int32_t swap32(int32_t l)
+            {
+                union u32 {
+                    uint8_t b[4];
+                    int32_t l;
+                };
+                u32 src, dst;
+                src.l = l;
+                dst.b[0] = src.b[3];
+                dst.b[1] = src.b[2];
+                dst.b[2] = src.b[1];
+                dst.b[3] = src.b[0];
+                return dst.l;
+            }
+        };
+#   else
+#       if defined(__APPLE__)
+#           include <machine/endian.h>
+#       else
+#           include <endian.h>
+#           include <netinet/in.h>
+#       endif // __APPLE__
+#       if BYTE_ORDER == BIG_ENDIAN
+#           define OSC_HOST_BIG_ENDIAN
+#           undef  OSC_HOST_LITTLE_ENDIAN
+#       elif BYTE_ORDER == LITTLE_ENDIAN
+#           define OSC_HOST_LITTLE_ENDIAN
+#           undef  OSC_HOST_BIG_ENDIAN
+#       else
+#           error Unknown BYTE_ORDER
+#       endif // BYTE_ORDER
+        namespace OSC
+        {
+            inline static int32_t swap32(int32_t l)
+            {
+                return ntohl(l);
+            }
+        };
+#   endif // _WINDOWS_
 #endif
 
-#ifdef OSC_HOST_LITTLE_ENDIAN
-# include <netinet/in.h>
+#if defined(OSC_HOST_BIG_ENDIAN) && defined(OSC_HOST_LITTLE_ENDIAN)
+# error Only one of OSC_HOST_BIG_ENDIAN or OSC_HOST_LITTLE_ENDIAN can be defined!
 #endif
 
 namespace OSC
 {
     inline static void convert32(void* v)
     {
-#ifdef OSC_HOST_LITTLE_ENDIAN
-        *static_cast<int32_t*>(v) = ntohl(*static_cast<int32_t*>(v));
+#if defined(OSC_HOST_LITTLE_ENDIAN)
+        *static_cast<int32_t*>(v) = swap32(*static_cast<int32_t*>(v));
 #endif
     }
 
     inline static void convert64(void* v)
     {
-#ifdef OSC_HOST_LITTLE_ENDIAN
+#if defined(OSC_HOST_LITTLE_ENDIAN)
         int32_t tmp = static_cast<int32_t*>(v)[0];
-        static_cast<int32_t*>(v)[0] = ntohl(static_cast<int32_t*>(v)[1]);
-        static_cast<int32_t*>(v)[1] = ntohl(tmp);
+        static_cast<int32_t*>(v)[0] = swap32(static_cast<int32_t*>(v)[1]);
+        static_cast<int32_t*>(v)[1] = swap32(tmp);
 #endif
     }
 };

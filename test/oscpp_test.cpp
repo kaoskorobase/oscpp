@@ -1,7 +1,5 @@
 // vim: et sw=4:
 #include <iostream>
-#include <machine/endian.h>
-#include <netinet/in.h>
 
 #define BUFFER_SIZE 256
 char buffer[BUFFER_SIZE];
