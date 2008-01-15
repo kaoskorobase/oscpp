@@ -34,16 +34,15 @@ namespace OSC
     class PacketTest
     {
     public:
-        static bool isMessage(const char *data, size_t size)
+        static bool isMessage(const void* data, size_t size)
         {
-            return (size > 3) && (*data != '#');
+            return (size > 3) && (static_cast<const char*>(data)[0] != '#');
         }
         static bool isMessage(ReadStream& stream)
         {
             return isMessage(stream.getPos(), stream.getConsumable());
         }
-
-        static bool isBundle(const char* data, size_t size)
+        static bool isBundle(const void* data, size_t size)
         {
             return (size > 15) && (memcmp(data, "#bundle", 8) == 0);
         }
@@ -55,9 +54,9 @@ namespace OSC
 
     struct ServerPacket
     {
-        ServerPacket(char* d, size_t s)
+        ServerPacket(void* inData, size_t inSize)
         {
-            ReadStream stream(d, s);
+            ReadStream stream(inData, inSize);
             if (PacketTest::isBundle(stream)) {
                 isBundle = true;
                 stream.skip(8); // skip #bundle tag
@@ -74,15 +73,15 @@ namespace OSC
 
         bool        isBundle;
         uint64_t    time;
-        char*       data;
+        void*       data;
         size_t      size;
     };
     
     struct Message
     {
-        char* path;
-        char* data;
-        size_t size;
+        char*   path;
+        void*   data;
+        size_t  size;
     };
     
     class MessageStream
@@ -166,7 +165,7 @@ namespace OSC
          * \throw OSC::UnderrunError stream buffer underrun.
          * \throw OSC::ParseError error while parsing input stream.
          */
-        ArgStream(char* data, size_t size) throw(ParseError)
+        ArgStream(void* data, size_t size) throw(ParseError)
             : m_argStream(data, size)
         {
             initFromArgStream();
@@ -178,7 +177,7 @@ namespace OSC
         }
         ArgStream(const ArgStream& other)
             : m_tagStream(other.m_tagStream),
-							m_argStream(other.m_argStream)
+			  m_argStream(other.m_argStream)
         { }
         ArgStream()
         { }

@@ -41,11 +41,11 @@ namespace OSC
             m_begin = m_end = m_pos = 0;
         }
 
-        Stream(char* data, size_t size)
+        Stream(void* data, size_t size)
         {
-            m_begin = data;
-            m_end = m_begin + size;
-            m_pos = m_begin;
+            m_begin = static_cast<byte_t*>(data);
+            m_end   = m_begin + size;
+            m_pos   = m_begin;
         }
 
         Stream(const Stream& stream)
@@ -86,19 +86,19 @@ namespace OSC
             return m_end - m_pos;
         }
 
-        char* getBegin() const
+        void* getBegin() const
         {
             return m_begin;
         }
 
-        char* getPos() const
+        void* getPos() const
         {
             return m_pos;
         }
 
-        void setPos(char *pos)
+        void setPos(void* pos)
         {
-            m_pos = std::max(m_begin, std::min(m_end, pos));
+            m_pos = std::max(m_begin, std::min(m_end, static_cast<byte_t*>(pos)));
         }
 
         static bool isAligned(size_t n)
@@ -117,9 +117,9 @@ namespace OSC
         }
 
     protected:
-        char*   m_begin;
-        char*   m_end;
-        char*   m_pos;
+        byte_t* m_begin;
+        byte_t* m_end;
+        byte_t* m_pos;
     };
 
     class WriteStream: public Stream
@@ -129,7 +129,7 @@ namespace OSC
             : Stream()
         { }
 
-        WriteStream(char* data, size_t size)
+        WriteStream(void* data, size_t size)
             : Stream(data, size)
         { }
 
@@ -188,13 +188,13 @@ namespace OSC
             m_pos += 4;
         }
 
-        void putData(const char* data, size_t size) throw (OverflowError)
+        void putData(const void* data, size_t size) throw (OverflowError)
         {
             size_t padding = Stream::getPadding(size);
-            char* pos = m_pos;
+            byte_t* pos = m_pos;
             checkWritable(size+padding);
-            memcpy(pos, data, size);
-            memset(pos+size, 0, padding);
+            memcpy(pos,      data, size);
+            memset(pos+size, 0,    padding);
             m_pos = pos+size+padding;
         }
 
@@ -212,7 +212,7 @@ namespace OSC
             : Stream()
         { }
 
-        ReadStream(char* data, size_t size)
+        ReadStream(void* data, size_t size)
             : Stream(data, size)
         { }
 
@@ -276,8 +276,8 @@ namespace OSC
 
         char* getString() throw (UnderrunError, ParseError)
         {
-            char* ptr = m_pos;
-            char* end = m_end;
+            char* ptr = static_cast<char*>(m_pos);
+            char* end = static_cast<char*>(m_end);
 
             checkReadable(4); // min string length
 

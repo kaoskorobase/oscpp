@@ -35,6 +35,11 @@ namespace OSC
      */
     class ClientPacket
     {
+        int32_t calcSize(void* begin, void* end)
+        {
+            return static_cast<byte_t*>(end) - static_cast<byte_t*>(begin) - 4;
+        }
+
     public:
         //! Constructor.
         /*!
@@ -47,7 +52,7 @@ namespace OSC
         //! Constructor.
         /*!
         */
-        ClientPacket(char* buffer, size_t size)
+        ClientPacket(void* buffer, size_t size)
         {
             reset(buffer, size);
         }
@@ -56,7 +61,7 @@ namespace OSC
         /*!
          * Return the start address of the packet currently under construction.
          */
-        char* getData() const
+        void* getData() const
         {
             return m_buffer;
         }
@@ -76,7 +81,7 @@ namespace OSC
         }
 
         //! Reset packet state.
-        void reset(char* buffer, size_t size)
+        void reset(void* buffer, size_t size)
         {
             m_buffer = buffer;
             m_bufferSize = size;
@@ -94,9 +99,11 @@ namespace OSC
         {
             if (m_inBundle) {
                 // get current stream pos
-                byte_t* curPos = m_argStream.getPos();
+                void* curPos = m_argStream.getPos();
                 // remember previous size pos offset
-                *(int32_t*)curPos = m_sizePosB - m_argStream.getBegin();
+                *(int32_t*)curPos =
+                      static_cast<byte_t*>(m_sizePosB)
+                    - static_cast<byte_t*>(m_argStream.getBegin());
                 m_argStream.skip(4);
                 // record size pos
                 m_sizePosB = curPos;
@@ -111,12 +118,14 @@ namespace OSC
             if (m_inBundle > 0) {
                 if (m_inBundle > 1) {
                     // get current stream pos
-                    byte_t* curPos = m_argStream.getPos();
+                    byte_t* curPos = static_cast<byte_t*>(m_argStream.getPos());
                     // get previous size pos
-                    byte_t* prevPos = m_argStream.getBegin() + *(int32_t*)m_sizePosB;
+                    void* prevPos =
+                          static_cast<byte_t*>(m_argStream.getBegin())
+                        + *(int32_t*)m_sizePosB;
                     // write bundle size
                     m_argStream.setPos(m_sizePosB);
-                    m_argStream.putInt32(curPos - m_sizePosB - 4);
+                    m_argStream.putInt32(calcSize(m_sizePosB, curPos));
                     // restore stream pos
                     m_argStream.setPos(curPos);
                     // record outer bundle size pos
@@ -147,10 +156,10 @@ namespace OSC
         {
             if (m_inBundle) {
                 // get current stream pos
-                byte_t* curPos = m_argStream.getPos();
+                byte_t* curPos = static_cast<byte_t*>(m_argStream.getPos());
                 // write message size
                 m_argStream.setPos(m_sizePosM);
-                m_argStream.putInt32(curPos - m_sizePosM - 4);
+                m_argStream.putInt32(calcSize(m_sizePosM, curPos));
                 // restore stream pos
                 m_argStream.setPos(curPos);
                 // reset tag stream
@@ -191,16 +200,16 @@ namespace OSC
         {
             m_tagStream.putChar('b');
             m_argStream.putInt32(arg.size);
-            m_argStream.putData(static_cast<const char*>(arg.data), arg.size);
+            m_argStream.putData(arg.data, arg.size);
         }
 
     private:
-        char*       m_buffer;
+        void*       m_buffer;
         size_t      m_bufferSize;
         WriteStream	m_argStream;	// packet stream
         WriteStream	m_tagStream;	// current tag stream
-        char*		m_sizePosM;     // last message size position
-        char*       m_sizePosB;     // last bundle size position
+        void*       m_sizePosM;     // last message size position
+        void*       m_sizePosB;     // last bundle size position
         size_t		m_inBundle;		// bundle nesting depth
     };
 
@@ -212,7 +221,7 @@ namespace OSC
         { }
 
     private:
-        char m_buffer[Size];
+        byte_t m_buffer[Size];
     };
 };
 

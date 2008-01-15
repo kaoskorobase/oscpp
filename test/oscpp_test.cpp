@@ -1,11 +1,11 @@
 // vim: et sw=4:
 #include <iostream>
 
-#define BUFFER_SIZE 256
-char buffer[BUFFER_SIZE];
-
 #include <oscpp/client.hh>
 #include <oscpp/server.hh>
+
+#define BUFFER_SIZE 256
+char buffer[BUFFER_SIZE];
 
 static void parseMessage(uint64_t t, const char* address, OSC::ArgStream& args, void* data)
 {
