@@ -155,7 +155,8 @@ namespace OSC
         void zero(size_t n) throw (OverflowError)
         {
             checkWritable(n);
-            while (n--) *m_pos++ = '\0';
+            memset(m_pos, 0, n);
+            m_pos += n;
         }
 
         void putChar(char c) throw (OverflowError)
