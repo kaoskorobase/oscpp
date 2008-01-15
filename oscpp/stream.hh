@@ -24,9 +24,9 @@
 #ifndef OSC_STREAM_HH_INCLUDED
 #define OSC_STREAM_HH_INCLUDED
 
-#include "OSC_Error.hh"
-#include "OSC_Host.hh"
-#include "OSC_Types.hh"
+#include <oscpp/error.hh>
+#include <oscpp/host.hh>
+#include <oscpp/types.hh>
 
 #include <algorithm>
 #include <cstring>

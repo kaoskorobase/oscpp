@@ -24,8 +24,8 @@
 #ifndef OSC_CLIENT_HH_INCLUDED
 #define OSC_CLIENT_HH_INCLUDED
 
-#include "OSC_Host.hh"
-#include "OSC_Stream.hh"
+#include <oscpp/host.hh>
+#include <oscpp/stream.hh>
 
 namespace OSC
 {

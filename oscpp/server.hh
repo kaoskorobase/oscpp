@@ -24,7 +24,7 @@
 #ifndef OSC_SERVER_HH_INCLUDED
 #define OSC_SERVER_HH_INCLUDED
 
-#include "OSC_Stream.hh"
+#include <oscpp/stream.hh>
 
 #include <algorithm>
 #include <cstring>

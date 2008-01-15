@@ -4,8 +4,8 @@
 #define BUFFER_SIZE 256
 char buffer[BUFFER_SIZE];
 
-#include <oscpp/OSC_Client.hh>
-#include <oscpp/OSC_Server.hh>
+#include <oscpp/client.hh>
+#include <oscpp/server.hh>
 
 static void parseMessage(uint64_t t, const char* address, OSC::ArgStream& args, void* data)
 {
