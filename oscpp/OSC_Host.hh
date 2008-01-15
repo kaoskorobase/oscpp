@@ -24,10 +24,6 @@
 #ifndef OSC_HOST_HH_INCLUDED
 #define OSC_HOST_HH_INCLUDED
 
-#ifndef OSC_MAX_BUNDLE_NESTING
-# define OSC_MAX_BUNDLE_NESTING 0
-#endif
-
 #if !defined(OSC_HOST_BIG_ENDIAN) && !defined(OSC_HOST_LITTLE_ENDIAN)
 # error One of OSC_HOST_BIG_ENDIAN or OSC_HOST_LITTLE_ENDIAN must be defined!
 #endif

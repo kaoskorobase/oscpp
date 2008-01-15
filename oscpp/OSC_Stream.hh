@@ -146,6 +146,12 @@ namespace OSC
             if (getConsumable() < n) throw OverflowError(n - getConsumable());
         }
 
+        void skip(size_t n) throw (OverflowError)
+        {
+            checkWritable(n);
+            m_pos += n;
+        }
+        
         void zero(size_t n) throw (OverflowError)
         {
             checkWritable(n);

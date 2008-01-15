@@ -35,14 +35,6 @@ namespace OSC
      */
     class ClientPacket
     {
-        void fixSize(char* sizePos)
-        {
-            char* pos = m_argStream.getPos();
-            m_argStream.setPos(sizePos);
-            m_argStream.putInt32(pos - sizePos - 4);
-            m_argStream.setPos(pos);
-        }
-
     public:
         //! Constructor.
         /*!
@@ -89,7 +81,7 @@ namespace OSC
             m_buffer = buffer;
             m_bufferSize = size;
             m_argStream = WriteStream(m_buffer, m_bufferSize);
-            m_sizePos[0] = 0;
+            m_sizePosM = m_sizePosB = 0;
             m_inBundle = 0;
         }
 
@@ -101,12 +93,13 @@ namespace OSC
         void openBundle(uint64_t time)
         {
             if (m_inBundle) {
-                if (m_inBundle < OSC_MAX_BUNDLE_NESTING) {
-                    m_sizePos[m_inBundle] = m_argStream.getPos();
-                    m_argStream.zero(4);
-                } else {
-                    throw OverflowError(0);
-                }
+                // get current stream pos
+                byte_t* curPos = m_argStream.getPos();
+                // remember previous size pos offset
+                *(int32_t*)curPos = m_sizePosB - m_argStream.getBegin();
+                m_argStream.skip(4);
+                // record size pos
+                m_sizePosB = curPos;
             }
             m_inBundle++;
             m_argStream.putString("#bundle");
@@ -115,9 +108,19 @@ namespace OSC
 
         void closeBundle()
         {
-            if (m_inBundle) {
+            if (m_inBundle > 0) {
                 if (m_inBundle > 1) {
-                    fixSize(m_sizePos[m_inBundle--]);
+                    // get current stream pos
+                    byte_t* curPos = m_argStream.getPos();
+                    // get previous size pos
+                    byte_t* prevPos = m_argStream.getBegin() + *(int32_t*)m_sizePosB;
+                    // write bundle size
+                    m_argStream.setPos(m_sizePosB);
+                    m_argStream.putInt32(curPos - m_sizePosB - 4);
+                    // restore stream pos
+                    m_argStream.setPos(curPos);
+                    // record outer bundle size pos
+                    m_sizePosB = prevPos;
                 }
                 m_inBundle--;
             } else {
@@ -128,8 +131,10 @@ namespace OSC
         void openMessage(const char* addr, size_t numArgs)
         {
             if (m_inBundle) {
-                m_sizePos[0] = m_argStream.getPos();
-                m_argStream.zero(4);
+                // record message size pos
+                m_sizePosM = m_argStream.getPos();
+                // advance arg stream
+                m_argStream.skip(4);
             }
             m_argStream.putString(addr);
             size_t sigLen = numArgs+2;
@@ -141,7 +146,14 @@ namespace OSC
         void closeMessage()
         {
             if (m_inBundle) {
-                fixSize(m_sizePos[0]);
+                // get current stream pos
+                byte_t* curPos = m_argStream.getPos();
+                // write message size
+                m_argStream.setPos(m_sizePosM);
+                m_argStream.putInt32(curPos - m_sizePosM - 4);
+                // restore stream pos
+                m_argStream.setPos(curPos);
+                // reset tag stream
                 m_tagStream = WriteStream();
             }
         }
@@ -183,11 +195,12 @@ namespace OSC
         }
 
     private:
-        char*           m_buffer;
-        size_t          m_bufferSize;
+        char*       m_buffer;
+        size_t      m_bufferSize;
         WriteStream	m_argStream;	// packet stream
         WriteStream	m_tagStream;	// current tag stream
-        char*		m_sizePos[OSC_MAX_BUNDLE_NESTING+1];   // last message size position
+        char*		m_sizePosM;     // last message size position
+        char*       m_sizePosB;     // last bundle size position
         size_t		m_inBundle;		// bundle nesting depth
     };
 

@@ -33,6 +33,8 @@ namespace OSC
         size_t  size;
         void*   data;
     };
+    
+    typedef char byte_t;
 };
 
 #endif // OSC_TYPES_HH_INCLUDED
