@@ -22,11 +22,11 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef OSC_CLIENT_HH_INCLUDED
-#define OSC_CLIENT_HH_INCLUDED
+#ifndef OSC_CLIENT_HPP_INCLUDED
+#define OSC_CLIENT_HPP_INCLUDED
 
-#include <oscpp/host.hh>
-#include <oscpp/stream.hh>
+#include <oscpp/host.hpp>
+#include <oscpp/stream.hpp>
 
 namespace OSC
 {
@@ -226,4 +226,4 @@ namespace OSC
     };
 };
 
-#endif // OSC_CLIENT_HH_INCLUDED
+#endif // OSC_CLIENT_HPP_INCLUDED

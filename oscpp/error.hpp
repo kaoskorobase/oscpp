@@ -22,8 +22,8 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef OSC_ERROR_HH_INCLUDED
-#define OSC_ERROR_HH_INCLUDED
+#ifndef OSC_ERROR_HPP_INCLUDED
+#define OSC_ERROR_HPP_INCLUDED
 
 #include <exception>
 #include <string>
@@ -105,4 +105,4 @@ namespace OSC
     };
 };    
 
-#endif // OSC_ERROR_HH_INCLUDED
+#endif // OSC_ERROR_HPP_INCLUDED

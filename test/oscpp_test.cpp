@@ -1,8 +1,8 @@
 // vim: et sw=4:
 #include <iostream>
 
-#include <oscpp/client.hh>
-#include <oscpp/server.hh>
+#include <oscpp/client.hpp>
+#include <oscpp/server.hpp>
 
 #define BUFFER_SIZE 256
 char buffer[BUFFER_SIZE];
