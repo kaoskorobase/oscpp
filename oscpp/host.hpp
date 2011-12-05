@@ -25,71 +25,65 @@
 #ifndef OSC_HOST_HPP_INCLUDED
 #define OSC_HOST_HPP_INCLUDED
 
-#if !defined(OSC_HOST_BIG_ENDIAN) && !defined(OSC_HOST_LITTLE_ENDIAN)
-#   if defined(_WINDOWS_)
-#       define OSC_HOST_LITTLE_ENDIAN
-        namespace OSC
-        {
-            inline static int32_t swap32(int32_t l)
-            {
-                union u32 {
-                    uint8_t b[4];
-                    int32_t l;
-                };
-                u32 src, dst;
-                src.l = l;
-                dst.b[0] = src.b[3];
-                dst.b[1] = src.b[2];
-                dst.b[2] = src.b[1];
-                dst.b[3] = src.b[0];
-                return dst.l;
-            }
-        };
-#   else
-#       if defined(__APPLE__)
-#           include <machine/endian.h>
-#       else
-#           include <endian.h>
-#           include <netinet/in.h>
-#       endif // __APPLE__
-#       if BYTE_ORDER == BIG_ENDIAN
-#           define OSC_HOST_BIG_ENDIAN
-#           undef  OSC_HOST_LITTLE_ENDIAN
-#       elif BYTE_ORDER == LITTLE_ENDIAN
-#           define OSC_HOST_LITTLE_ENDIAN
-#           undef  OSC_HOST_BIG_ENDIAN
-#       else
-#           error Unknown BYTE_ORDER
-#       endif // BYTE_ORDER
-        namespace OSC
-        {
-            inline static int32_t swap32(int32_t l)
-            {
-                return ntohl(l);
-            }
-        };
-#   endif // _WINDOWS_
-#endif
+#include <boost/cstdint.hpp>
+#include <boost/detail/endian.hpp>
 
-#if defined(OSC_HOST_BIG_ENDIAN) && defined(OSC_HOST_LITTLE_ENDIAN)
-# error Only one of OSC_HOST_BIG_ENDIAN or OSC_HOST_LITTLE_ENDIAN can be defined!
+#if defined(__GNUC__)
+#   define oscpp_bswap32(x)  __builtin_bswap32(x)
+#   define oscpp_bswap64(x)  __builtin_bswap64(x)
+#elif defined(_WINDOWS_)
+#   include <stdlib.h>
+#   define oscpp_bswap32(x)  _byteswap_ulong(x)
+#   define oscpp_bswap64(x)  _byteswap_uint64(x)
+#else
+    // Fallback implementation
+    inline static int32_t oscpp_bswap32(int32_t l)
+    {
+        union u32 {
+            uint8_t b[4];
+            int32_t l;
+        };
+        u32 src, dst;
+        src.l = l;
+        dst.b[0] = src.b[3];
+        dst.b[1] = src.b[2];
+        dst.b[2] = src.b[1];
+        dst.b[3] = src.b[0];
+        return dst.l;
+    }
+    inline static int64_t oscpp_bswap64(int64_t l)
+    {
+        union u64 {
+            uint8_t b[8];
+            int64_t l;
+        };
+        u64 src, dst;
+        src.l = l;
+        dst.b[0] = src.b[7];
+        dst.b[1] = src.b[6];
+        dst.b[2] = src.b[5];
+        dst.b[3] = src.b[4];
+        dst.b[4] = src.b[3];
+        dst.b[5] = src.b[2];
+        dst.b[6] = src.b[1];
+        dst.b[7] = src.b[0];
+        return dst.l;
+    }
 #endif
 
 namespace OSC
 {
     inline static void convert32(void* v)
     {
-#if defined(OSC_HOST_LITTLE_ENDIAN)
-        *static_cast<int32_t*>(v) = swap32(*static_cast<int32_t*>(v));
+#if defined(BOOST_LITTLE_ENDIAN)
+        *static_cast<int32_t*>(v) = oscpp_bswap32(*static_cast<int32_t*>(v));
 #endif
     }
 
     inline static void convert64(void* v)
     {
-#if defined(OSC_HOST_LITTLE_ENDIAN)
-        int32_t tmp = static_cast<int32_t*>(v)[0];
-        static_cast<int32_t*>(v)[0] = swap32(static_cast<int32_t*>(v)[1]);
-        static_cast<int32_t*>(v)[1] = swap32(tmp);
+#if defined(BOOST_LITTLE_ENDIAN)
+        *static_cast<int64_t*>(v) = oscpp_bswap64(*static_cast<int64_t*>(v));
 #endif
     }
 };
