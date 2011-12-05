@@ -25,7 +25,7 @@
 #ifndef OSC_TYPES_HPP_INCLUDED
 #define OSC_TYPES_HPP_INCLUDED
 
-#include <stdint.h>
+#include <boost/cstdint.hpp>
 
 namespace OSC
 {
