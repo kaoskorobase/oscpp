@@ -207,11 +207,11 @@ namespace OSC
     private:
         void*       m_buffer;
         size_t      m_bufferSize;
-        WriteStream	m_argStream;	// packet stream
-        WriteStream	m_tagStream;	// current tag stream
+        WriteStream m_argStream;    // packet stream
+        WriteStream m_tagStream;    // current tag stream
         void*       m_sizePosM;     // last message size position
         void*       m_sizePosB;     // last bundle size position
-        size_t		m_inBundle;		// bundle nesting depth
+        size_t      m_inBundle;     // bundle nesting depth
     };
 
     template <int Size> class StaticClientPacket : public ClientPacket
