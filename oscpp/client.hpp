@@ -28,6 +28,10 @@
 #include <oscpp/host.hpp>
 #include <oscpp/stream.hpp>
 
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+
 namespace OSC
 {
 namespace Client
@@ -64,56 +68,56 @@ namespace Client
         /*!
          * Return the start address of the packet currently under construction.
          */
-        void* getData() const
+        void* data() const
         {
             return m_buffer;
         }
 
-        size_t getBufferSize() const
+        size_t capacity() const
         {
-            return m_bufferSize;
+            return m_capacity;
         }
 
         //! Get packet content size.
         /*!
          * Return the size of the packet currently under construction.
          */
-        size_t getSize() const
+        size_t size() const
         {
-            return m_argStream.getConsumed();
+            return m_args.consumed();
         }
 
         //! Reset packet state.
         void reset(void* buffer, size_t size)
         {
             m_buffer = buffer;
-            m_bufferSize = size;
-            m_argStream = WriteStream(m_buffer, m_bufferSize);
+            m_capacity = size;
+            m_args = WriteStream(m_buffer, m_capacity);
             m_sizePosM = m_sizePosB = 0;
             m_inBundle = 0;
         }
 
         void reset()
         {
-            reset(m_buffer, m_bufferSize);
+            reset(m_buffer, m_capacity);
         }
 
         void openBundle(uint64_t time)
         {
             if (m_inBundle) {
                 // get current stream pos
-                void* curPos = m_argStream.getPos();
+                void* curPos = m_args.pos();
                 // remember previous size pos offset
                 *(int32_t*)curPos =
                       static_cast<byte_t*>(m_sizePosB)
-                    - static_cast<byte_t*>(m_argStream.getBegin());
-                m_argStream.skip(4);
+                    - static_cast<byte_t*>(m_args.begin());
+                m_args.skip(4);
                 // record size pos
                 m_sizePosB = curPos;
             }
             m_inBundle++;
-            m_argStream.putString("#bundle");
-            m_argStream.putUInt64(time);
+            m_args.putString("#bundle");
+            m_args.putUInt64(time);
         }
 
         void closeBundle()
@@ -121,16 +125,16 @@ namespace Client
             if (m_inBundle > 0) {
                 if (m_inBundle > 1) {
                     // get current stream pos
-                    byte_t* curPos = static_cast<byte_t*>(m_argStream.getPos());
+                    byte_t* curPos = static_cast<byte_t*>(m_args.pos());
                     // get previous size pos
                     void* prevPos =
-                          static_cast<byte_t*>(m_argStream.getBegin())
+                          static_cast<byte_t*>(m_args.begin())
                         + *(int32_t*)m_sizePosB;
                     // write bundle size
-                    m_argStream.setPos(m_sizePosB);
-                    m_argStream.putInt32(calcSize(m_sizePosB, curPos));
+                    m_args.setPos(m_sizePosB);
+                    m_args.putInt32(calcSize(m_sizePosB, curPos));
                     // restore stream pos
-                    m_argStream.setPos(curPos);
+                    m_args.setPos(curPos);
                     // record outer bundle size pos
                     m_sizePosB = prevPos;
                 }
@@ -144,29 +148,29 @@ namespace Client
         {
             if (m_inBundle) {
                 // record message size pos
-                m_sizePosM = m_argStream.getPos();
+                m_sizePosM = m_args.pos();
                 // advance arg stream
-                m_argStream.skip(4);
+                m_args.skip(4);
             }
-            m_argStream.putString(addr);
+            m_args.putString(addr);
             size_t sigLen = numArgs+2;
-            m_tagStream = WriteStream(m_argStream, sigLen);
-            m_argStream.zero(WriteStream::getAligned(sigLen));
-            m_tagStream.putChar(',');
+            m_tags = WriteStream(m_args, sigLen);
+            m_args.zero(WriteStream::align(sigLen));
+            m_tags.putChar(',');
         }
 
         void closeMessage()
         {
             if (m_inBundle) {
                 // get current stream pos
-                byte_t* curPos = static_cast<byte_t*>(m_argStream.getPos());
+                byte_t* curPos = static_cast<byte_t*>(m_args.pos());
                 // write message size
-                m_argStream.setPos(m_sizePosM);
-                m_argStream.putInt32(calcSize(m_sizePosM, curPos));
+                m_args.setPos(m_sizePosM);
+                m_args.putInt32(calcSize(m_sizePosM, curPos));
                 // restore stream pos
-                m_argStream.setPos(curPos);
+                m_args.setPos(curPos);
                 // reset tag stream
-                m_tagStream = WriteStream();
+                m_tags = WriteStream();
             }
         }
 
@@ -183,48 +187,51 @@ namespace Client
          */
         void putInt32(int32_t arg)
         {
-            m_tagStream.putChar('i');
-            m_argStream.putInt32(arg);
+            m_tags.putChar('i');
+            m_args.putInt32(arg);
         }
 
         void putFloat32(float arg)
         {
-            m_tagStream.putChar('f');
-            m_argStream.putFloat32(arg);
+            m_tags.putChar('f');
+            m_args.putFloat32(arg);
         }
 
         void putString(const char* arg)
         {
-            m_tagStream.putChar('s');
-            m_argStream.putString(arg);
+            m_tags.putChar('s');
+            m_args.putString(arg);
         }
 
-        void putBlob(const blob_t& arg)
+        // @throw std::invalid_argument if blob size is greater than std::numeric_limits<int32_t>::max()
+        void putBlob(const Blob& arg)
         {
-            m_tagStream.putChar('b');
-            m_argStream.putInt32(arg.size);
-            m_argStream.putData(arg.data, arg.size);
+            if (arg.size > std::numeric_limits<int32_t>::max())
+                throw std::invalid_argument("Blob size greater than maximum value representable by int32_t");
+            m_tags.putChar('b');
+            m_args.putInt32(arg.size);
+            m_args.putData(arg.data, arg.size);
         }
 
     private:
         void*       m_buffer;
-        size_t      m_bufferSize;
-        WriteStream m_argStream;    // packet stream
-        WriteStream m_tagStream;    // current tag stream
+        size_t      m_capacity;
+        WriteStream m_args;         // packet stream
+        WriteStream m_tags;         // current tag stream
         void*       m_sizePosM;     // last message size position
         void*       m_sizePosB;     // last bundle size position
         size_t      m_inBundle;     // bundle nesting depth
     };
 
-    template <size_t size> class StaticPacket : public Packet
+    template <size_t buffer_size> class StaticPacket : public Packet
     {
     public:
         StaticPacket()
-            : Packet(m_buffer, size)
+            : Packet(m_buffer, buffer_size)
         { }
 
     private:
-        byte_t m_buffer[size];
+        byte_t m_buffer[buffer_size];
     };
 }; // namespace Client
 }; // namespace OSC

@@ -28,9 +28,12 @@
 #include <oscpp/stream.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 
 namespace OSC
+{
+namespace Server
 {
     class PacketTest
     {
@@ -39,99 +42,20 @@ namespace OSC
         {
             return (size > 3) && (static_cast<const char*>(data)[0] != '#');
         }
-        static bool isMessage(ReadStream& stream)
+        static bool isMessage(const ReadStream& stream)
         {
-            return isMessage(stream.getPos(), stream.getConsumable());
+            return isMessage(stream.pos(), stream.consumable());
         }
         static bool isBundle(const void* data, size_t size)
         {
             return (size > 15) && (memcmp(data, "#bundle", 8) == 0);
         }
-        static bool isBundle(ReadStream& stream)
+        static bool isBundle(const ReadStream& stream)
         {
-            return isBundle(stream.getPos(), stream.getConsumable());
+            return isBundle(stream.pos(), stream.consumable());
         }
     };
 
-    struct ServerPacket
-    {
-        ServerPacket(void* inData, size_t inSize)
-        {
-            ReadStream stream(inData, inSize);
-            if (PacketTest::isBundle(stream)) {
-                isBundle = true;
-                stream.skip(8); // skip #bundle tag
-                time = stream.getUInt64();
-            } else if (PacketTest::isMessage(stream)) {
-                isBundle = false;
-                time = 1;
-            } else {
-                throw ParseError();
-            }
-            data = stream.getPos();
-            size = stream.getConsumable();
-        };
-
-        bool        isBundle;
-        uint64_t    time;
-        void*       data;
-        size_t      size;
-    };
-    
-    struct Message
-    {
-        char*   path;
-        void*   data;
-        size_t  size;
-    };
-    
-    class MessageStream
-    {
-        static void next_m(ReadStream& stream, Message& m)
-        {
-            size_t size = stream.getConsumable();
-            ReadStream mstream(stream);
-            m.path = mstream.getString();
-            m.data = mstream.getPos();
-            m.size = mstream.getConsumable();
-            stream.skip(size);
-        }
-        static void next_b(ReadStream& stream, Message& m)
-        {
-            size_t size = stream.getInt32();
-            if (PacketTest::isMessage(stream)) {
-                ReadStream mstream(stream, size);
-                m.path = mstream.getString();
-                m.data = mstream.getPos();
-                m.size = mstream.getConsumable();
-            }
-            stream.skip(size);
-        }
-
-    public:
-        MessageStream(ServerPacket& packet)
-            : m_stream(packet.data, packet.size)
-        {
-            m_next = packet.isBundle ? &next_b : &next_m;
-        }
-
-        bool atEnd() const
-        {
-            return m_stream.atEnd();
-        }
-        
-        Message next()
-        {
-            Message m;
-            (*m_next)(m_stream, m);
-            return m;
-        }
-
-    private:
-        ReadStream  m_stream;
-        void (*m_next)(ReadStream&, Message&);
-    };
-    
     //! OSC Message Argument Iterator.
     /*!
      * Retrieve typed arguments from an incoming message.
@@ -149,14 +73,6 @@ namespace OSC
      */
     class ArgStream
     {
-    private:
-        void initFromArgStream() throw(ParseError)
-        {
-            char* tagString = m_argStream.getString();
-            if (*tagString++ != ',') throw ParseError();
-            m_tagStream = ReadStream(tagString, strlen(tagString));
-        }
-
     public:
         //! Constructor.
         /*!
@@ -166,30 +82,15 @@ namespace OSC
          * \throw OSC::UnderrunError stream buffer underrun.
          * \throw OSC::ParseError error while parsing input stream.
          */
-        ArgStream(void* data, size_t size) throw(ParseError)
-            : m_argStream(data, size)
+        ArgStream(const ReadStream& stream)
+            : m_args(stream)
         {
-            initFromArgStream();
+            const char* tags = m_args.getString();
+            if (tags[0] != ',') throw ParseError("Tag string doesn't start with ','");
+            m_tags = ReadStream(tags+1, strlen(tags));
         }
-        ArgStream(Message& msg) throw(ParseError)
-            : m_argStream(msg.data, msg.size)
-        {
-            initFromArgStream();
-        }
-        ArgStream(const ArgStream& other)
-            : m_tagStream(other.m_tagStream),
-			  m_argStream(other.m_argStream)
-        { }
-        ArgStream()
-        { }
+        ArgStream(const ArgStream& other) = default;
 
-        //! Reset stream to initial state.
-        void reset()
-        {
-            m_argStream.reset();
-            m_tagStream.reset();
-        }
-            
         //! Return size of stream.
         /*!
          * Return number of arguments that can be read from the stream
@@ -197,7 +98,7 @@ namespace OSC
          */
         size_t getSize() const
         {
-            return m_tagStream.getSize();
+            return m_tags.capacity();
         }
 
         //! End of stream reached?
@@ -207,7 +108,7 @@ namespace OSC
          */
         bool atEnd() const
         {
-            return m_tagStream.atEnd();
+            return m_tags.atEnd();
         }
 
         //! Get next type tag.
@@ -217,9 +118,9 @@ namespace OSC
          * \throw OSC::UnderrunError stream buffer underrun.
          * \sa OSC::ArgIter
          */
-        char peekTag() const throw (UnderrunError)
+        char tag() const
         {
-            return m_tagStream.peekChar();
+            return m_tags.peekChar();
         }
 
         //! Get next integer argument.
@@ -230,12 +131,12 @@ namespace OSC
          * \exception OSC::UnderrunError stream buffer underrun.
          * \exception OSC::ParseError argument could not be converted.
          */
-        int32_t getInt32() throw (UnderrunError, ParseError)
+        int32_t int32()
         {
-            register char t = m_tagStream.getChar();
-            if (t == 'i') return m_argStream.getInt32();
-            if (t == 'f') return (int32_t)m_argStream.getFloat32();
-            throw ParseError();
+            const char t = m_tags.getChar();
+            if (t == 'i') return m_args.getInt32();
+            if (t == 'f') return (int32_t)m_args.getFloat32();
+            throw ParseError("Cannot convert argument to int");
         }
 
         //! Get next float argument.
@@ -246,12 +147,12 @@ namespace OSC
          * \exception OSC::UnderrunError stream buffer underrun.
          * \exception OSC::ParseError argument could not be converted.
          */
-        float getFloat32() throw (UnderrunError, ParseError)
+        float float32()
         {
-            register char t = m_tagStream.getChar();
-            if (t == 'f') return m_argStream.getFloat32();
-            if (t == 'i') return (float)m_argStream.getInt32();
-            throw ParseError();
+            const char t = m_tags.getChar();
+            if (t == 'f') return m_args.getFloat32();
+            if (t == 'i') return (float)m_args.getInt32();
+            throw ParseError("Cannot convert argument to float");
         }
 
         //! Get next string argument.
@@ -262,52 +163,173 @@ namespace OSC
          * \exception OSC::ParseError argument could not be converted or is not
          * a valid string.
          */
-        const char* getString() throw (UnderrunError, ParseError)
+        const char* string()
         {
-            if (m_tagStream.getChar() == 's') {
-                char* res = m_argStream.getString();
-                if (res) return res;
+            if (m_tags.getChar() == 's') {
+                return m_args.getString();
             }
-            throw ParseError();
+            throw ParseError("Cannot convert argument to string");
         }
 
         //! Get next blob argument.
         /*!
          * Read next blob argument and return it as a NULL-terminated string.
          *
-         * \exception OSC::UnderrunError stream buffer underrun.
-         * \exception OSC::ParseError argument could not be converted or is not
-         * a valid string.
+         * @throw OSC::UnderrunError stream buffer underrun.
+         * @throw OSC::ParseError argument is not a valid blob
          */
-        blob_t getBlob() throw (UnderrunError, ParseError)
+        Blob blob()
         {
-            blob_t blob;
-            if (m_tagStream.getChar() == 'b') {
-                blob.size = m_argStream.getInt32();
-                if (blob.size >= 0) {
-                    blob.data = static_cast<void*>(m_argStream.getPos());
-                    m_argStream.skip(blob.size);
+            if (m_tags.getChar() == 'b') {
+                int32_t size = m_args.getInt32();
+                if (size < 0) {
+                    throw ParseError("Invalid blob size is less than zero");
                 } else {
-                    throw ParseError();
+                    static_assert(sizeof(size_t) >= sizeof(int32_t),
+                                  "Size of size_t must be greater than size of int32_t");
+                    const void* data = m_args.pos();
+                    m_args.skip(m_args.align(size));
+                    return Blob { static_cast<size_t>(size)
+                                , data };
                 }
             } else {
-                throw ParseError();
+                throw ParseError("Cannot convert argument to blob");
             }
-            return blob;
         }
 
     private:
-        ReadStream	m_tagStream;
-        ReadStream	m_argStream;
+        ReadStream m_args;
+        ReadStream m_tags;
     };
-};
 
-static inline bool operator==(const OSC::Message& msg, const char* str)
+    class Message
+    {
+    public:
+        Message(const char* address, const ReadStream& stream)
+            : m_address(address)
+            , m_args(ArgStream(stream))
+        { }
+
+        const char* address() const
+        {
+            return m_address;
+        }
+
+        const ArgStream& args() const
+        {
+            return m_args;
+        }
+
+    private:
+        const char* m_address;
+        ArgStream   m_args;
+    };
+    
+    class PacketStream;
+
+    class Bundle
+    {
+    public:
+        Bundle(uint64_t time, const ReadStream& stream)
+            : m_time(time)
+            , m_stream(stream)
+        { }
+
+        uint64_t time() const
+        {
+            return m_time;
+        }
+
+        PacketStream packets() const;
+
+    private:
+        uint64_t   m_time;
+        ReadStream m_stream;
+    };
+
+    class Packet
+    {
+    public:
+        Packet(const ReadStream& stream)
+            : m_stream(stream)
+            , m_isBundle(PacketTest::isBundle(stream))
+        {
+            // Skip over #bundle header
+            if (m_isBundle) m_stream.skip(8);
+        }
+
+        Packet(const void* data, size_t size)
+            : Packet(ReadStream(data, size))
+        { }
+
+        bool isBundle() const
+        {
+            return m_isBundle;
+        }
+
+        bool isMessage() const
+        {
+            return !isBundle();
+        }
+
+        operator Bundle () const
+        {
+            if (!isBundle()) throw ParseError("Packet is not a bundle");
+            ReadStream stream(m_stream);
+            uint64_t time = stream.getUInt64();
+            return Bundle(time, std::move(stream));
+        }
+
+        operator Message () const
+        {
+            if (!isMessage()) throw ParseError("Packet is not a message");
+            ReadStream stream(m_stream);
+            const char* address = stream.getString();
+            return Message(address, std::move(stream));
+        }
+
+    private:
+        ReadStream m_stream;
+        bool       m_isBundle;
+    };
+    
+    class PacketStream
+    {
+    public:
+        PacketStream(const ReadStream& stream)
+            : m_stream(stream)
+        { }
+
+        bool atEnd() const
+        {
+            return m_stream.atEnd();
+        }
+ 
+        Packet next()
+        {
+            size_t size = m_stream.getInt32();
+            ReadStream pstream(m_stream, size);
+            m_stream.skip(size);
+            return Packet(pstream);
+        }
+
+    private:
+        ReadStream m_stream;
+    };
+
+    PacketStream Bundle::packets() const
+    {
+        return PacketStream(m_stream);
+    }
+}; // namespace Server
+}; // namespace OSC
+
+static inline bool operator==(const OSC::Server::Message& msg, const char* str)
 {
-    return strcmp(msg.path, str) == 0;
+    return strcmp(msg.address(), str) == 0;
 }
 
-static inline bool operator==(const char* str, const OSC::Message& msg)
+static inline bool operator==(const char* str, const OSC::Server::Message& msg)
 {
     return msg == str;
 }

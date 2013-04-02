@@ -30,6 +30,8 @@
 #include <oscpp/types.hpp>
 
 #include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <cstring>
 
 namespace OSC
@@ -67,39 +69,80 @@ namespace OSC
             m_pos = m_begin;
         }
 
-        bool atEnd() const
-        {
-            return m_pos == m_end;
-        }
-
-        size_t getSize() const
-        {
-            return m_end - m_begin;
-        }
-            
-        size_t getConsumed() const
-        {
-            return m_pos - m_begin;
-        }
-
-        size_t getConsumable() const
-        {
-            return m_end - m_pos;
-        }
-
-        void* getBegin() const
+        const byte_t* begin() const
         {
             return m_begin;
         }
 
-        void* getPos() const
+        byte_t* begin()
+        {
+            return m_begin;
+        }
+
+        const byte_t* end() const
+        {
+            return m_end;
+        }
+
+        size_t capacity() const
+        {
+            return end() - begin();
+        }
+            
+        const byte_t* pos() const
         {
             return m_pos;
         }
 
+        byte_t* pos()
+        {
+            return m_pos;
+        }
+
+        template <typename T> inline const T* pointer() const
+        {
+            return reinterpret_cast<const T*>(pos());
+        }
+
+        template <typename T> inline T* pointer()
+        {
+            return reinterpret_cast<T*>(pos());
+        }
+
+        template <typename T> inline const T& ref() const
+        {
+            return *pointer<T>();
+        }
+
+        template <typename T> inline T& ref()
+        {
+            return *pointer<T>();
+        }
+
         void setPos(void* pos)
         {
-            m_pos = std::max(m_begin, std::min(m_end, static_cast<byte_t*>(pos)));
+            assert((pos >= m_begin) && (pos < m_end));
+            m_pos = static_cast<byte_t*>(pos);
+        }
+
+        void advance(size_t n)
+        {
+            m_pos += n;
+        }
+
+        bool atEnd() const
+        {
+            return pos() == end();
+        }
+
+        size_t consumed() const
+        {
+            return pos() - begin();
+        }
+
+        size_t consumable() const
+        {
+            return end() - pos();
         }
 
         static bool isAligned(size_t n)
@@ -107,14 +150,14 @@ namespace OSC
             return (n & 3) == 0;
         }
 
-        static size_t getAligned(size_t n)
+        static size_t align(size_t n)
         {
             return (n + 3) & -4;
         }
 
-        static size_t getPadding(size_t n)
+        static size_t padding(size_t n)
         {
-            return getAligned(n) - n;
+            return align(n) - n;
         }
 
     protected:
@@ -142,65 +185,65 @@ namespace OSC
             : Stream(stream, size)
         { }
 
-        void checkWritable(size_t n) const throw (OverflowError)
+        // throw (OverflowError)
+        void checkWritable(size_t n) const
         {
-            if (getConsumable() < n) throw OverflowError(n - getConsumable());
+            if (consumable() < n)
+                throw OverflowError(n - consumable());
         }
 
-        void skip(size_t n) throw (OverflowError)
+        void skip(size_t n)
         {
             checkWritable(n);
-            m_pos += n;
+            advance(n);
         }
         
-        void zero(size_t n) throw (OverflowError)
+        void zero(size_t n)
         {
             checkWritable(n);
             memset(m_pos, 0, n);
-            m_pos += n;
+            advance(n);
         }
 
-        void putChar(char c) throw (OverflowError)
+        void putChar(char c)
         {
             checkWritable(1);
-            *m_pos++ = c;
+            ref<char>() = c;
+            advance(1);
         }
 
-        void putInt32(int32_t v) throw (OverflowError)
+        void putInt32(int32_t x)
         {
             checkWritable(4);
-            *((int32_t*)m_pos) = v;
-            convert32(m_pos);
-            m_pos += 4;
+            ref<int32_t>() = convert32<NetworkByteOrder>(x);
+            advance(4);
         }
 
-        void putUInt64(uint64_t v) throw (OverflowError)
+        void putUInt64(uint64_t x)
         {
             checkWritable(8);
-            *((uint64_t*)m_pos) = v;
-            convert64(m_pos);
-            m_pos += 8;
+            ref<uint64_t>() = convert64<NetworkByteOrder>(x);
+            advance(8);
         }
 
-        void putFloat32(float v) throw (OverflowError)
+        void putFloat32(float x)
         {
             checkWritable(4);
-            *((float*)m_pos) = v;
-            convert32(m_pos);
-            m_pos += 4;
+            ref<float>() = convert32<NetworkByteOrder>(x);
+            advance(4);
         }
 
-        void putData(const void* data, size_t size) throw (OverflowError)
+        void putData(const void* data, size_t size)
         {
-            size_t padding = Stream::getPadding(size);
-            byte_t* pos = m_pos;
-            checkWritable(size+padding);
-            memcpy(pos,      data, size);
-            memset(pos+size, 0,    padding);
-            m_pos = pos+size+padding;
+            const size_t padding = Stream::padding(size);
+            const size_t n = size + padding;
+            checkWritable(n);
+            memcpy(pos(),      data, size);
+            memset(pos()+size, 0,    padding);
+            advance(n);
         }
 
-        void putString(const char* s) throw (OverflowError)
+        void putString(const char* s)
         {
             putData(s, strlen(s)+1);
         }
@@ -211,11 +254,10 @@ namespace OSC
     {
     public:
         ReadStream()
-            : Stream()
         { }
 
-        ReadStream(void* data, size_t size)
-            : Stream(data, size)
+        ReadStream(const void* data, size_t size)
+            : Stream(const_cast<void*>(data), size)
         { }
 
         ReadStream(const ReadStream& stream)
@@ -226,60 +268,67 @@ namespace OSC
             : Stream(stream, size)
         { }
 
-        void checkReadable(size_t n) const throw (UnderrunError)
+        // throw (UnderrunError)
+        void checkReadable(size_t n) const
         {
-            if (getConsumable() < n) throw UnderrunError();
+            if (consumable() < n) throw UnderrunError();
         }
 
-        void skip(size_t n) throw (UnderrunError)
+        // throw (UnderrunError)
+        void skip(size_t n)
         {
             checkReadable(n);
-            m_pos += n;
+            advance(n);
         }
 
-        char getChar() throw (UnderrunError)
+        // throw (UnderrunError)
+        char getChar()
         {
             checkReadable(1);
-            return *m_pos++;
+            const char x = ref<char>();
+            advance(1);
+            return x;
         }
 
-        char peekChar() const throw (UnderrunError)
+        // throw (UnderrunError)
+        char peekChar() const
         {
             checkReadable(1);
-            return *m_pos;
+            return ref<char>();
         }
 
-        int32_t getInt32() throw (UnderrunError)
+        // throw (UnderrunError)
+        int32_t getInt32()
         {
             checkReadable(4);
-            int32_t v = *(int32_t*)m_pos;
-            m_pos += 4;
-            convert32(&v);
-            return v;
+            int32_t x = convert32<NetworkByteOrder>(ref<int32_t>());
+            advance(4);
+            return x;
         }
 
-        uint64_t getUInt64() throw (UnderrunError)
+        // throw (UnderrunError)
+        uint64_t getUInt64()
         {
             checkReadable(8);
-            uint64_t v = *((uint64_t*)m_pos);
-            m_pos += 8;
-            convert64(&v);
-            return v;
+            uint64_t x = convert64<NetworkByteOrder>(ref<uint64_t>());
+            advance(8);
+            return x;
         }
 
-        float getFloat32() throw (UnderrunError)
+        // throw (UnderrunError)
+        float getFloat32()
         {
             checkReadable(4);
-            float v = *(float*)m_pos;
-            m_pos += 4;
-            convert32(&v);
-            return v;
+            float x = convert32<NetworkByteOrder>(ref<float>());
+            advance(4);
+            return x;
         }
 
-        char* getString() throw (UnderrunError, ParseError)
+        // throw (UnderrunError, ParseError) 
+        const char* getString()
         {
-            char* ptr = static_cast<char*>(m_pos);
-            char* end = static_cast<char*>(m_end);
+            const char* ptr = static_cast<const char*>(pos());
+            const char* end = static_cast<const char*>(this->end());
 
             checkReadable(4); // min string length
 
@@ -289,19 +338,19 @@ namespace OSC
                 ptr++;
             }
 
-            size_t n = getPadding(++ptr - m_pos);
+            size_t n = padding(++ptr - pos());
             while (n--) {
                 if (ptr == end) throw UnderrunError();
                 if (*ptr != '\0') throw ParseError();
                 ptr++;
             }
 
-            char* s = m_pos;
-            m_pos = ptr;
+            const char* x = pos();
+            advance(ptr - pos());
 
-            return s;
+            return x;
         }
     };
-};
+}; // namespace OSC
 
 #endif // OSC_STREAM_HPP_INCLUDED
