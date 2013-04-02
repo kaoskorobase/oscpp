@@ -30,11 +30,13 @@
 
 namespace OSC
 {
+namespace Client
+{
     //! OSC packet construction.
     /*!
      * Contruct a valid OSC packet for transmitting over a transport medium.
      */
-    class ClientPacket
+    class Packet
     {
         int32_t calcSize(void* begin, void* end)
         {
@@ -45,7 +47,7 @@ namespace OSC
         //! Constructor.
         /*!
         */
-        ClientPacket()
+        Packet()
         {
             reset(0, 0);
         }
@@ -53,7 +55,7 @@ namespace OSC
         //! Constructor.
         /*!
         */
-        ClientPacket(void* buffer, size_t size)
+        Packet(void* buffer, size_t size)
         {
             reset(buffer, size);
         }
@@ -214,16 +216,17 @@ namespace OSC
         size_t      m_inBundle;     // bundle nesting depth
     };
 
-    template <int Size> class StaticClientPacket : public ClientPacket
+    template <size_t size> class StaticPacket : public Packet
     {
     public:
-        StaticClientPacket()
-            : ClientPacket(m_buffer, Size)
+        StaticPacket()
+            : Packet(m_buffer, size)
         { }
 
     private:
-        byte_t m_buffer[Size];
+        byte_t m_buffer[size];
     };
-};
+}; // namespace Client
+}; // namespace OSC
 
 #endif // OSC_CLIENT_HPP_INCLUDED
