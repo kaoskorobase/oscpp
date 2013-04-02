@@ -25,14 +25,12 @@
 #ifndef OSC_TYPES_HPP_INCLUDED
 #define OSC_TYPES_HPP_INCLUDED
 
-#include <boost/cstdint.hpp>
-
 namespace OSC
 {
-    struct blob_t
+    struct Blob
     {
-        size_t  size;
-        void*   data;
+        size_t      size;
+        const void* data;
     };
     
     typedef char byte_t;
