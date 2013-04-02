@@ -37,46 +37,45 @@ namespace OSC
             : m_what(what)
         { }
 
-        ~Error() throw ()
+        virtual ~Error() noexcept
         { }
 
-        const char* what() throw ()
+        const char* what() const noexcept override
         {
             return m_what.c_str();
         }
 
     private:
         std::string m_what;
-    }; // class Error
     };
 
     class UnderrunError : public Error
     {
     public:
         UnderrunError()
-            : Error(std::string("buffer underrun"))
+            : Error(std::string("Buffer underrun"))
         { }
     };
     
     class OverflowError : public Error
     {
     public:
-        OverflowError(size_t missing)
-            : Error(std::string("buffer overflow")),
-              m_missing(missing)
+        OverflowError(size_t bytes)
+            : Error(std::string("Buffer overflow")),
+              m_bytes(bytes)
         { }
 
-        size_t getMissing() const { return m_missing; }
+        size_t numBytes() const { return m_bytes; }
 
     private:
-        size_t m_missing;
+        size_t m_bytes;
     };
     
     class ParseError : public Error
     {
     public:
-        ParseError()
-            : Error(std::string("parse error"))
+        ParseError(const std::string& what="Parse error")
+            : Error(what)
         { }
     };
 };    
