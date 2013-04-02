@@ -28,23 +28,6 @@
 #include <exception>
 #include <string>
 
-#ifdef NDEBUG
-#  define M_OSC_DEBUG	0
-#else
-#  define M_OSC_DEBUG	1
-#endif // OSC_DEBUG
-
-#if M_OSC_DEBUG
-#  define M_OSC_ASSERT(expr)                    \
-        do {                                    \
-            if (!(expr)) {                      \
-                throw ::OSC::AssertionFailure();\
-            }                                   \
-        } while (0)
-#else
-#  define M_OSC_ASSERT(expr)
-#endif // M_OSC_DEBUG
-
 namespace OSC
 {
     class Error : public std::exception
@@ -65,13 +48,6 @@ namespace OSC
     private:
         std::string m_what;
     }; // class Error
-
-    class AssertionFailure : public Error
-    {
-    public:
-        AssertionFailure()
-            : Error(std::string("assertion failure"))
-        { }
     };
 
     class UnderrunError : public Error
