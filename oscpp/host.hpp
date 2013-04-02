@@ -25,66 +25,92 @@
 #ifndef OSC_HOST_HPP_INCLUDED
 #define OSC_HOST_HPP_INCLUDED
 
-#include <boost/cstdint.hpp>
-#include <boost/detail/endian.hpp>
-
-#if defined(__GNUC__)
-#   define oscpp_bswap32(x)  __builtin_bswap32(x)
-#   define oscpp_bswap64(x)  __builtin_bswap64(x)
-#elif defined(_WINDOWS_)
-#   include <stdlib.h>
-#   define oscpp_bswap32(x)  _byteswap_ulong(x)
-#   define oscpp_bswap64(x)  _byteswap_uint64(x)
-#else
-    // Fallback implementation
-    inline static int32_t oscpp_bswap32(int32_t l)
-    {
-        union u32 {
-            uint8_t b[4];
-            int32_t l;
-        };
-        u32 src, dst;
-        src.l = l;
-        dst.b[0] = src.b[3];
-        dst.b[1] = src.b[2];
-        dst.b[2] = src.b[1];
-        dst.b[3] = src.b[0];
-        return dst.l;
-    }
-    inline static int64_t oscpp_bswap64(int64_t l)
-    {
-        union u64 {
-            uint8_t b[8];
-            int64_t l;
-        };
-        u64 src, dst;
-        src.l = l;
-        dst.b[0] = src.b[7];
-        dst.b[1] = src.b[6];
-        dst.b[2] = src.b[5];
-        dst.b[3] = src.b[4];
-        dst.b[4] = src.b[3];
-        dst.b[5] = src.b[2];
-        dst.b[6] = src.b[1];
-        dst.b[7] = src.b[0];
-        return dst.l;
-    }
-#endif
+#include <cstdint>
+#include <oscpp/endian.hpp>
 
 namespace OSC
 {
-    inline static void convert32(void* v)
+#if defined(__GNUC__)
+    inline static uint32_t bswap32(uint32_t x)
     {
-#if defined(BOOST_LITTLE_ENDIAN)
-        *static_cast<int32_t*>(v) = oscpp_bswap32(*static_cast<int32_t*>(v));
+        return __builtin_bswap32(x);
+    }
+    inline static uint64_t bswap64(uint64_t x)
+    {
+        return __builtin_bswap64(x);
+    }
+#elif defined(_WINDOWS_)
+#   include <stdlib.h>
+    inline static uint32_t bswap32(uint32_t x)
+    {
+        return _byteswap_ulong(x);
+    }
+    inline static uint64_t bswap64(uint64_t x)
+    {
+        return _byteswap_uint64(x);
+    }
+#else
+    // Fallback implementation
+#   warning Using unoptimized byte swap functions
+
+    inline static uint32_t bswap32(uint32_t x)
+    {
+        const uint32_t b1 = x << 24;
+        const uint32_t b2 = (x & 0x0000FF00) << 8;
+        const uint32_t b3 = (x & 0x00FF0000) >> 8;
+        const uint32_t b4 = x >> 24;
+        return b1 | b2 | b3 | b4;
+    }
+    inline static uint64_t bswap64(int64_t x)
+    {
+        const uint64_t w1 = oscpp_bswap(uint32_t(x & 0x00000000FFFFFFFF)) << 32;
+        const uint64_t w2 = oscpp_bswap(uint32_t(x >> 32));
+        return w1 | w2;
+    }
+#endif
+
+    enum ByteOrder
+    {
+        NetworkByteOrder,
+        HostByteOrder
+    };
+
+    template<ByteOrder B> inline uint32_t convert32(uint32_t x)
+    {
+        // static_assert(false, "Unknown ByteOrder");
+    }
+
+    template<> inline uint32_t convert32<NetworkByteOrder>(uint32_t x)
+    {
+#if defined(OSCPP_LITTLE_ENDIAN)
+        return bswap32(x);
+#else
+        return x;
 #endif
     }
 
-    inline static void convert64(void* v)
+    template<> inline uint32_t convert32<HostByteOrder>(uint32_t x)
     {
-#if defined(BOOST_LITTLE_ENDIAN)
-        *static_cast<int64_t*>(v) = oscpp_bswap64(*static_cast<int64_t*>(v));
+        return x;
+    }
+
+    template<ByteOrder B> inline uint64_t convert64(uint64_t x)
+    {
+        // static_assert(false, "Unknown ByteOrder");
+    }
+
+    template<> inline uint64_t convert64<NetworkByteOrder>(uint64_t x)
+    {
+#if defined(OSCPP_LITTLE_ENDIAN)
+        return bswap64(x);
+#else
+        return x;
 #endif
+    }
+
+    template<> inline uint64_t convert64<HostByteOrder>(uint64_t x)
+    {
+        return x;
     }
 };
 
