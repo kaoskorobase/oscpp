@@ -122,6 +122,19 @@ namespace Server
             return m_tags.peekChar();
         }
 
+        //* Drop next argument.
+        void drop()
+        {
+            const char t = tag();
+            switch (t) {
+                case 'i': int32(); break;
+                case 'f': float32(); break;
+                case 's': string(); break;
+                case 'b': blob(); break;
+                default: throw ParseError("Unknown type tag");
+            }
+        }
+
         //! Get next integer argument.
         /*!
          * Read next numerical argument from the input stream and convert it to
