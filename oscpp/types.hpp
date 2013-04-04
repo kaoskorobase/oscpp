@@ -1,6 +1,6 @@
-// OSCpp library
+// oscpp library
 //
-// Copyright (c) 2004-2011 Stefan Kersten <sk@k-hornz.de>
+// Copyright (c) 2004-2013 Stefan Kersten <sk@k-hornz.de>
 //
 // Permission is hereby granted, free of charge, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
