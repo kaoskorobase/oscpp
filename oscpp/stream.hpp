@@ -22,8 +22,8 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef OSC_STREAM_HPP_INCLUDED
-#define OSC_STREAM_HPP_INCLUDED
+#ifndef OSCPP_STREAM_HPP_INCLUDED
+#define OSCPP_STREAM_HPP_INCLUDED
 
 #include <oscpp/error.hpp>
 #include <oscpp/host.hpp>
@@ -360,4 +360,4 @@ namespace OSC
     };
 }; // namespace OSC
 
-#endif // OSC_STREAM_HPP_INCLUDED
+#endif // OSCPP_STREAM_HPP_INCLUDED

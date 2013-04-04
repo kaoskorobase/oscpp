@@ -22,8 +22,8 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef OSC_HOST_HPP_INCLUDED
-#define OSC_HOST_HPP_INCLUDED
+#ifndef OSCPP_HOST_HPP_INCLUDED
+#define OSCPP_HOST_HPP_INCLUDED
 
 #include <cstdint>
 #include <oscpp/endian.hpp>
@@ -114,4 +114,4 @@ namespace OSC
     }
 };
 
-#endif // OSC_HOST_HPP_INCLUDED
+#endif // OSCPP_HOST_HPP_INCLUDED

@@ -22,8 +22,8 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef OSC_SERVER_HPP_INCLUDED
-#define OSC_SERVER_HPP_INCLUDED
+#ifndef OSCPP_SERVER_HPP_INCLUDED
+#define OSCPP_SERVER_HPP_INCLUDED
 
 #include <oscpp/stream.hpp>
 
@@ -383,4 +383,4 @@ static inline bool operator==(const char* str, const OSC::Server::Message& msg)
     return msg == str;
 }
 
-#endif // OSC_SERVER_HPP_INCLUDED
+#endif // OSCPP_SERVER_HPP_INCLUDED

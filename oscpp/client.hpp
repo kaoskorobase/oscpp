@@ -22,8 +22,8 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef OSC_CLIENT_HPP_INCLUDED
-#define OSC_CLIENT_HPP_INCLUDED
+#ifndef OSCPP_CLIENT_HPP_INCLUDED
+#define OSCPP_CLIENT_HPP_INCLUDED
 
 #include <oscpp/host.hpp>
 #include <oscpp/stream.hpp>
@@ -244,4 +244,4 @@ namespace Client
 }; // namespace Client
 }; // namespace OSC
 
-#endif // OSC_CLIENT_HPP_INCLUDED
+#endif // OSCPP_CLIENT_HPP_INCLUDED
