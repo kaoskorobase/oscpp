@@ -102,7 +102,7 @@ namespace Client
             reset(m_buffer, m_capacity);
         }
 
-        void openBundle(uint64_t time)
+        Packet& openBundle(uint64_t time)
         {
             if (m_inBundle) {
                 // get current stream pos
@@ -118,9 +118,10 @@ namespace Client
             m_inBundle++;
             m_args.putString("#bundle");
             m_args.putUInt64(time);
+            return *this;
         }
 
-        void closeBundle()
+        Packet& closeBundle()
         {
             if (m_inBundle > 0) {
                 if (m_inBundle > 1) {
@@ -142,9 +143,10 @@ namespace Client
             } else {
                 throw UnderrunError();
             }
+            return *this;
         }
 
-        void openMessage(const char* addr, size_t numArgs)
+        Packet& openMessage(const char* addr, size_t numArgs)
         {
             if (m_inBundle) {
                 // record message size pos
@@ -157,9 +159,10 @@ namespace Client
             m_tags = WriteStream(m_args, sigLen);
             m_args.zero(WriteStream::align(sigLen));
             m_tags.putChar(',');
+            return *this;
         }
 
-        void closeMessage()
+        Packet& closeMessage()
         {
             if (m_inBundle) {
                 // get current stream pos
@@ -172,6 +175,7 @@ namespace Client
                 // reset tag stream
                 m_tags = WriteStream();
             }
+            return *this;
         }
 
         //! Write integer message argument.
@@ -185,32 +189,36 @@ namespace Client
          *
          * \throw OSC::XRunError stream buffer xrun.
          */
-        void putInt32(int32_t arg)
+        Packet& int32(int32_t arg)
         {
             m_tags.putChar('i');
             m_args.putInt32(arg);
+            return *this;
         }
 
-        void putFloat32(float arg)
+        Packet& float32(float arg)
         {
             m_tags.putChar('f');
             m_args.putFloat32(arg);
+            return *this;
         }
 
-        void putString(const char* arg)
+        Packet& string(const char* arg)
         {
             m_tags.putChar('s');
             m_args.putString(arg);
+            return *this;
         }
 
         // @throw std::invalid_argument if blob size is greater than std::numeric_limits<int32_t>::max()
-        void putBlob(const Blob& arg)
+        Packet& blob(const Blob& arg)
         {
             if (arg.size > std::numeric_limits<int32_t>::max())
                 throw std::invalid_argument("Blob size greater than maximum value representable by int32_t");
             m_tags.putChar('b');
             m_args.putInt32(arg.size);
             m_args.putData(arg.data, arg.size);
+            return *this;
         }
 
     private:
