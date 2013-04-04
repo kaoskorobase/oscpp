@@ -224,7 +224,7 @@ namespace Server
         ArgStream   m_args;
     };
     
-    class PacketStream;
+    class PacketIterator;
 
     class Bundle
     {
@@ -239,7 +239,8 @@ namespace Server
             return m_time;
         }
 
-        PacketStream packets() const;
+        PacketIterator begin() const;
+        PacketIterator end() const;
 
     private:
         uint64_t   m_time;
@@ -249,6 +250,10 @@ namespace Server
     class Packet
     {
     public:
+        Packet()
+            : m_isBundle(false)
+        { }
+
         Packet(const ReadStream& stream)
             : m_stream(stream)
             , m_isBundle(PacketTest::isBundle(stream))
@@ -292,33 +297,65 @@ namespace Server
         bool       m_isBundle;
     };
     
-    class PacketStream
+    class PacketIterator
     {
     public:
-        PacketStream(const ReadStream& stream)
+        PacketIterator(const ReadStream& stream)
             : m_stream(stream)
-        { }
-
-        bool atEnd() const
+            , m_skip(0)
         {
-            return m_stream.atEnd();
+            if (!m_stream.atEnd())
+                m_skip = getPacket();
         }
- 
-        Packet next()
+
+        PacketIterator& operator++()
         {
-            size_t size = m_stream.getInt32();
-            ReadStream pstream(m_stream, size);
-            m_stream.skip(size);
-            return Packet(pstream);
+            m_stream.skip(m_skip);
+            if (m_stream.atEnd())
+                m_skip = 0;
+            else
+                m_skip = getPacket();
+            return *this;
+        }
+
+        bool operator==(const PacketIterator& it)
+        {
+            return m_stream.pos() == it.m_stream.pos();
+        }
+
+        bool operator!=(const PacketIterator& it)
+        {
+            return m_stream.pos() != it.m_stream.pos();
+        }
+
+        const Packet& operator*()
+        {
+            if (m_stream.atEnd())
+                throw ParseError("Trying to read past end of packet");
+            return m_packet;
         }
 
     private:
+        size_t getPacket()
+        {
+            const size_t size = m_stream.peekInt32();
+            m_packet = Packet(ReadStream(m_stream, size));
+            return sizeof(int32_t) + size;
+        }
+
         ReadStream m_stream;
+        Packet     m_packet;
+        size_t     m_skip;
     };
 
-    PacketStream Bundle::packets() const
+    PacketIterator Bundle::begin() const
     {
-        return PacketStream(m_stream);
+        return PacketIterator(m_stream);
+    }
+
+    PacketIterator Bundle::end() const
+    {
+        return PacketIterator(ReadStream(m_stream.end(), 0));
     }
 }; // namespace Server
 }; // namespace OSC
