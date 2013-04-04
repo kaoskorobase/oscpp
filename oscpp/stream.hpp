@@ -283,32 +283,38 @@ namespace OSC
         }
 
         // throw (UnderrunError)
-        char getChar()
-        {
-            checkReadable(1);
-            const char x = ref<char>();
-            advance(1);
-            return x;
-        }
-
-        // throw (UnderrunError)
-        char peekChar() const
+        inline char peekChar() const
         {
             checkReadable(1);
             return ref<char>();
         }
 
         // throw (UnderrunError)
-        int32_t getInt32()
+        inline char getChar()
+        {
+            const char x = peekChar();
+            advance(1);
+            return x;
+        }
+
+        // throw (UnderrunError)
+        inline int32_t peekInt32()
         {
             checkReadable(4);
-            int32_t x = convert32<NetworkByteOrder>(ref<int32_t>());
+            return convert32<NetworkByteOrder>(ref<int32_t>());
+        }
+
+        // throw (UnderrunError)
+        inline int32_t getInt32()
+        {
+            checkReadable(4);
+            const int32_t x = convert32<NetworkByteOrder>(ref<int32_t>());
             advance(4);
             return x;
         }
 
         // throw (UnderrunError)
-        uint64_t getUInt64()
+        inline uint64_t getUInt64()
         {
             checkReadable(8);
             uint64_t x = convert64<NetworkByteOrder>(ref<uint64_t>());
