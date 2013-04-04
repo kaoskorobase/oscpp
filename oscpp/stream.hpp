@@ -317,12 +317,12 @@ namespace OSC
         }
 
         // throw (UnderrunError)
-        float getFloat32()
+        inline float getFloat32()
         {
             checkReadable(4);
-            float x = convert32<NetworkByteOrder>(ref<float>());
+            uint32_t x = convert32<NetworkByteOrder>(ref<uint32_t>());
             advance(4);
-            return x;
+            return *reinterpret_cast<float*>(&x);
         }
 
         // throw (UnderrunError, ParseError) 
