@@ -38,7 +38,7 @@ namespace Client
 {
     //! OSC packet construction.
     /*!
-     * Contruct a valid OSC packet for transmitting over a transport medium.
+     * Construct a valid OSC packet for transmitting over a transport medium.
      */
     class Packet
     {
