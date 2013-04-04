@@ -226,9 +226,10 @@ namespace OSC
             advance(8);
         }
 
-        void putFloat32(float x)
+        void putFloat32(float f)
         {
             checkWritable(4);
+            const int32_t x = *reinterpret_cast<int32_t*>(&f);
             ref<float>() = convert32<NetworkByteOrder>(x);
             advance(4);
         }
