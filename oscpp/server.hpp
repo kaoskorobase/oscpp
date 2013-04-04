@@ -87,7 +87,7 @@ namespace Server
         {
             const char* tags = m_args.getString();
             if (tags[0] != ',') throw ParseError("Tag string doesn't start with ','");
-            m_tags = ReadStream(tags+1, strlen(tags));
+            m_tags = ReadStream(tags+1, strlen(tags)-1);
         }
         ArgStream(const ArgStream& other) = default;
 
