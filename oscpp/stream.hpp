@@ -298,7 +298,7 @@ namespace OSC
         }
 
         // throw (UnderrunError)
-        inline int32_t peekInt32()
+        inline int32_t peekInt32() const
         {
             checkReadable(4);
             return convert32<NetworkByteOrder>(ref<int32_t>());
