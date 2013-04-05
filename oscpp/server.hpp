@@ -127,9 +127,9 @@ namespace Server
         {
             const char t = tag();
             switch (t) {
-                case 'i': int32(); break;
-                case 'f': float32(); break;
-                case 's': string(); break;
+                case 'i': m_args.skip(4); break;
+                case 'f': m_args.skip(4); break;
+                case 's': m_args.getString(); break;
                 case 'b': blob(); break;
                 default: throw ParseError("Unknown type tag");
             }
