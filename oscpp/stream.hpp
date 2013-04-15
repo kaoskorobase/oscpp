@@ -334,26 +334,19 @@ namespace OSC
         // throw (UnderrunError, ParseError) 
         const char* getString()
         {
-            const char* ptr = static_cast<const char*>(pos());
-            const char* end = static_cast<const char*>(this->end());
-
             checkReadable(4); // min string length
 
-            while (true) {
-                if (ptr == end) throw UnderrunError();
-                if (*ptr == '\0') break;
-                ptr++;
-            }
+            const char* ptr = static_cast<const char*>(pos()) + 3;
+            const char* end = static_cast<const char*>(this->end());
 
-            size_t n = padding(++ptr - pos());
-            while (n--) {
-                if (ptr == end) throw UnderrunError();
-                if (*ptr != '\0') throw ParseError();
-                ptr++;
+            while (true) {
+                if (ptr >= end) throw UnderrunError();
+                if (*ptr == '\0') break;
+                ptr += 4;
             }
 
             const char* x = pos();
-            advance(ptr - pos());
+            advance(ptr - pos() + 1);
 
             return x;
         }
