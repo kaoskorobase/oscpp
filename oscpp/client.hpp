@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
+#include <type_traits>
 
 namespace OSC
 {
@@ -90,6 +91,7 @@ namespace Client
         //! Reset packet state.
         void reset(void* buffer, size_t size)
         {
+            Stream::checkAlignment(&m_buffer, kMaxAlignment);
             m_buffer = buffer;
             m_capacity = size;
             m_args = WriteStream(m_buffer, m_capacity);
@@ -235,11 +237,12 @@ namespace Client
     {
     public:
         StaticPacket()
-            : Packet(m_buffer, buffer_size)
+            : Packet(reinterpret_cast<byte_t*>(&m_buffer), buffer_size)
         { }
 
     private:
-        byte_t m_buffer[buffer_size];
+        typedef typename std::aligned_storage<buffer_size,kMaxAlignment>::type AlignedBuffer;
+        AlignedBuffer m_buffer;
     };
 }; // namespace Client
 }; // namespace OSC

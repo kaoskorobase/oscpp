@@ -36,6 +36,8 @@
 
 namespace OSC
 {
+    static const size_t kMaxAlignment = 8;
+
     class Stream
     {
     public:
@@ -145,17 +147,32 @@ namespace OSC
             return end() - pos();
         }
 
-        static bool isAligned(size_t n)
+        inline static void checkAlignment(const void* ptr, size_t n)
+        {
+            assert( isAligned(ptr, n) );
+        }
+
+        inline void checkAlignment(size_t n) const
+        {
+            checkAlignment(pos(), n);
+        }
+
+        inline static bool isAligned(const void* ptr, size_t alignment)
+        {
+            return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
+        }
+
+        inline static bool isAligned(size_t n)
         {
             return (n & 3) == 0;
         }
 
-        static size_t align(size_t n)
+        inline static size_t align(size_t n)
         {
             return (n + 3) & -4;
         }
 
-        static size_t padding(size_t n)
+        inline static size_t padding(size_t n)
         {
             return align(n) - n;
         }
@@ -186,7 +203,7 @@ namespace OSC
         { }
 
         // throw (OverflowError)
-        void checkWritable(size_t n) const
+        inline void checkWritable(size_t n) const
         {
             if (consumable() < n)
                 throw OverflowError(n - consumable());
@@ -215,6 +232,7 @@ namespace OSC
         void putInt32(int32_t x)
         {
             checkWritable(4);
+            checkAlignment(4);
             ref<int32_t>() = convert32<NetworkByteOrder>(x);
             advance(4);
         }
@@ -222,6 +240,7 @@ namespace OSC
         void putUInt64(uint64_t x)
         {
             checkWritable(8);
+            checkAlignment(8);
             ref<uint64_t>() = convert64<NetworkByteOrder>(x);
             advance(8);
         }
@@ -229,6 +248,7 @@ namespace OSC
         void putFloat32(float f)
         {
             checkWritable(4);
+            checkAlignment(4);
             const int32_t x = *reinterpret_cast<int32_t*>(&f);
             ref<float>() = convert32<NetworkByteOrder>(x);
             advance(4);
@@ -301,6 +321,7 @@ namespace OSC
         inline int32_t peekInt32() const
         {
             checkReadable(4);
+            checkAlignment(4);
             return convert32<NetworkByteOrder>(ref<int32_t>());
         }
 
@@ -308,6 +329,7 @@ namespace OSC
         inline int32_t getInt32()
         {
             checkReadable(4);
+            checkAlignment(4);
             const int32_t x = convert32<NetworkByteOrder>(ref<int32_t>());
             advance(4);
             return x;
@@ -317,6 +339,7 @@ namespace OSC
         inline uint64_t getUInt64()
         {
             checkReadable(8);
+            checkAlignment(8);
             uint64_t x = convert64<NetworkByteOrder>(ref<uint64_t>());
             advance(8);
             return x;
@@ -326,6 +349,7 @@ namespace OSC
         inline float getFloat32()
         {
             checkReadable(4);
+            checkAlignment(4);
             uint32_t x = convert32<NetworkByteOrder>(ref<uint32_t>());
             advance(4);
             return *reinterpret_cast<float*>(&x);
