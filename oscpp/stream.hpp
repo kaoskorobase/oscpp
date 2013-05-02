@@ -260,8 +260,8 @@ namespace OSC
             const size_t padding = Stream::padding(size);
             const size_t n = size + padding;
             checkWritable(n);
-            memcpy(pos(),      data, size);
-            memset(pos()+size, 0,    padding);
+            std::memcpy(pos(),      data, size);
+            std::memset(pos()+size, 0,    padding);
             advance(n);
         }
 
