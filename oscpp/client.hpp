@@ -91,7 +91,7 @@ namespace Client
         //! Reset packet state.
         void reset(void* buffer, size_t size)
         {
-            Stream::checkAlignment(&m_buffer, kMaxAlignment);
+            Stream::checkAlignment(&m_buffer, kAlignment);
             m_buffer = buffer;
             m_capacity = size;
             m_args = WriteStream(m_buffer, m_capacity);
@@ -241,7 +241,7 @@ namespace Client
         { }
 
     private:
-        typedef typename std::aligned_storage<buffer_size,kMaxAlignment>::type AlignedBuffer;
+        typedef typename std::aligned_storage<buffer_size,kAlignment>::type AlignedBuffer;
         AlignedBuffer m_buffer;
     };
 }; // namespace Client

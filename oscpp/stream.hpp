@@ -36,7 +36,7 @@
 
 namespace OSC
 {
-    static const size_t kMaxAlignment = 8;
+    static const size_t kAlignment = 4;
 
     class Stream
     {
