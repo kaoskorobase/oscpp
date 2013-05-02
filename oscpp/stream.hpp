@@ -239,10 +239,11 @@ namespace OSC
 
         void putUInt64(uint64_t x)
         {
-            checkWritable(8);
-            checkAlignment(8);
-            ref<uint64_t>() = convert64<NetworkByteOrder>(x);
-            advance(8);
+            checkWritable(sizeof(uint64_t));
+            // We cannot guarantee 8 byte alignment here
+            const uint64_t y = convert64<NetworkByteOrder>(x);
+            std::memcpy(pointer<uint64_t>(), &y, sizeof(uint64_t));
+            advance(sizeof(uint64_t));
         }
 
         void putFloat32(float f)
@@ -338,11 +339,12 @@ namespace OSC
         // throw (UnderrunError)
         inline uint64_t getUInt64()
         {
-            checkReadable(8);
-            checkAlignment(8);
-            uint64_t x = convert64<NetworkByteOrder>(ref<uint64_t>());
-            advance(8);
-            return x;
+            checkReadable(sizeof(uint64_t));
+            // We cannot guarantee 8 byte alignment here
+            uint64_t x;
+            std::memcpy(&x, pointer<uint64_t>(), sizeof(uint64_t));
+            advance(sizeof(uint64_t));
+            return convert64<NetworkByteOrder>(x);
         }
 
         // throw (UnderrunError)
