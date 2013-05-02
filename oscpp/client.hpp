@@ -65,6 +65,9 @@ namespace Client
             reset(buffer, size);
         }
 
+        //! Destructor.
+        virtual ~Packet() { }
+
         //! Get packet buffer address.
         /*!
          * Return the start address of the packet currently under construction.
@@ -243,6 +246,19 @@ namespace Client
     private:
         typedef typename std::aligned_storage<buffer_size,kAlignment>::type AlignedBuffer;
         AlignedBuffer m_buffer;
+    };
+
+    template class DynamicPacket : public Packet
+    {
+    public:
+        DynamicPacket(size_t buffer_size)
+            : Packet(static_cast<byte_t*>(new char[buffer_size]), buffer_size)
+        { }
+
+        ~DynamicPacket()
+        {
+            delete [] static_cast<char*>(data());
+        }
     };
 }; // namespace Client
 }; // namespace OSC
