@@ -38,6 +38,64 @@ namespace OSC
 {
     static const size_t kAlignment = 4;
 
+    inline bool isAligned(const void* ptr, size_t alignment)
+    {
+        return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
+    }
+
+    constexpr bool isAligned(size_t n)
+    {
+        return (n & 3) == 0;
+    }
+
+    constexpr size_t align(size_t n)
+    {
+        return (n + 3) & -4;
+    }
+
+    constexpr size_t padding(size_t n)
+    {
+        return align(n) - n;
+    }
+
+    inline void checkAlignment(const void* ptr, size_t n)
+    {
+        assert( isAligned(ptr, n) );
+    }
+
+    namespace Size
+    {
+        template <size_t N> constexpr size_t string(char const (&a)[N])
+        {
+            return align(N);
+        }
+
+        template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
+        {
+            return string(address) + align(numArgs+2);
+        }
+
+        constexpr size_t int32()
+        {
+            return 4;
+        }
+
+        constexpr size_t float32()
+        {
+            return 4;
+        }
+
+        constexpr size_t string(size_t n)
+        {
+            return align(n+1);
+        }
+
+        constexpr size_t blob(size_t n)
+        {
+            return 4 + align(n);
+        }
+    };
+
     class Stream
     {
     public:
@@ -147,34 +205,9 @@ namespace OSC
             return end() - pos();
         }
 
-        inline static void checkAlignment(const void* ptr, size_t n)
-        {
-            assert( isAligned(ptr, n) );
-        }
-
         inline void checkAlignment(size_t n) const
         {
-            checkAlignment(pos(), n);
-        }
-
-        inline static bool isAligned(const void* ptr, size_t alignment)
-        {
-            return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
-        }
-
-        inline static bool isAligned(size_t n)
-        {
-            return (n & 3) == 0;
-        }
-
-        inline static size_t align(size_t n)
-        {
-            return (n + 3) & -4;
-        }
-
-        inline static size_t padding(size_t n)
-        {
-            return align(n) - n;
+            OSC::checkAlignment(pos(), n);
         }
 
     protected:
@@ -257,7 +290,7 @@ namespace OSC
 
         void putData(const void* data, size_t size)
         {
-            const size_t padding = Stream::padding(size);
+            const size_t padding = OSC::padding(size);
             const size_t n = size + padding;
             checkWritable(n);
             std::memcpy(pos(),      data, size);

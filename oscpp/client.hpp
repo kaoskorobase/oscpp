@@ -94,7 +94,7 @@ namespace Client
         //! Reset packet state.
         void reset(void* buffer, size_t size)
         {
-            Stream::checkAlignment(&m_buffer, kAlignment);
+            OSC::checkAlignment(&m_buffer, kAlignment);
             m_buffer = buffer;
             m_capacity = size;
             m_args = WriteStream(m_buffer, m_capacity);
@@ -162,7 +162,7 @@ namespace Client
             m_args.putString(addr);
             size_t sigLen = numArgs+2;
             m_tags = WriteStream(m_args, sigLen);
-            m_args.zero(WriteStream::align(sigLen));
+            m_args.zero(OSC::align(sigLen));
             m_tags.putChar(',');
             return *this;
         }

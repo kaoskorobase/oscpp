@@ -200,7 +200,7 @@ namespace Server
                     static_assert(sizeof(size_t) >= sizeof(int32_t),
                                   "Size of size_t must be greater than size of int32_t");
                     const void* data = m_args.pos();
-                    m_args.skip(m_args.align(size));
+                    m_args.skip(OSC::align(size));
                     return Blob { static_cast<size_t>(size)
                                 , data };
                 }
