@@ -106,23 +106,13 @@ namespace Server
             return m_tags.capacity();
         }
 
-        //! End of stream reached?
-        /*!
-         * Return true if no more arguments can be read from the input
-         * stream according to the message's type signature.
-         */
+        //* Return true if no more arguments can be read from the stream.
         bool atEnd() const
         {
             return m_tags.atEnd();
         }
 
-        //! Get next type tag.
-        /*!
-         * Return the type tag corresponding to the next message argument.
-         *
-         * \throw OSC::UnderrunError stream buffer underrun.
-         * \sa OSC::ArgIter
-         */
+        //* Return the type tag corresponding to the next message argument.
         char tag() const
         {
             return m_tags.peekChar();
