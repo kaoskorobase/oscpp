@@ -91,12 +91,8 @@ namespace Server
             m_tags = ReadStream(tags+1, strlen(tags)-1);
         }
 
-        //! Return size of stream.
-        /*!
-         * Return number of arguments that can be read from the stream
-         * according to the message's type signature.
-         */
-        size_t getSize() const
+        //* Return the number of arguments that can be read from the stream.
+        size_t size() const
         {
             return m_tags.capacity();
         }
