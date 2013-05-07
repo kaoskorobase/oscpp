@@ -25,75 +25,134 @@
 #ifndef OSCPP_PRINT_HPP_INCLUDED
 #define OSCPP_PRINT_HPP_INCLUDED
 
+#include <oscpp/client.hpp>
 #include <oscpp/server.hpp>
-#include <stdstream>
+#include <ostream>
 
 namespace OSC
 {
     namespace detail
     {
-        inline static void indent(std::ostream& out, size_t n)
+        const size_t kDefaultIndentWidth = 4;
+
+        class Indent
         {
+        public:
+            Indent(size_t w)
+                : m_width(w)
+                , m_indent(0)
+            { }
+            Indent(size_t w, size_t n)
+                : m_width(w)
+                , m_indent(n)
+            { }
+            Indent(const Indent&) = default;
+
+            operator size_t () const { return m_indent; }
+            Indent inc() const { return Indent(m_width, m_indent+m_width); }
+
+        private:
+            size_t m_width;
+            size_t m_indent;
+        };
+
+        inline std::ostream& operator<<(std::ostream& out, const Indent& indent)
+        {
+            size_t n = indent;
             while (n-- > 0) out << ' ';
+            return out;
         }
-        inline static void printPacket(std::ostream& out, const OSC::Server::Bundle& bundle, size_t curIndent, size_t indentWidth)
+
+        inline void printArgs(std::ostream& out, Server::ArgStream args)
         {
-            for (auto p : bundle) {
-                if (p.isMessage())
-                    printMessage(p, curIndent);
-                else
-                    printBundle(p, curIndent, indentWidth);
+            while (!args.atEnd()) {
+                const char t = args.tag();
+                switch (t) {
+                    case 'i':
+                        out << "i:" << args.int32();
+                        break;
+                    case 'f':
+                        out << "f:" << args.float32();
+                        break;
+                    case 's':
+                        out << "s:" << args.string();
+                        break;
+                    case 'b':
+                        out << "b:" << args.blob().size;
+                        break;
+                    case '[':
+                        out << "[ ";
+                        printArgs(out, args.array());
+                        out << " ]";
+                        break;
+                    default:
+                        out << t << ":?";
+                        args.drop();
+                        break;
+                }
+                out << ' ';
+            }
+        }
+
+        inline void printMessage(std::ostream& out, const Server::Message& msg, const Indent& indent)
+        {
+            out << indent << msg.address() << ' ';
+            printArgs(out, msg.args());
+        }
+
+        inline void printBundle(std::ostream& out, const Server::Bundle& bundle, const Indent& indent)
+        {
+            out << indent << "# " << bundle.time() << " [" << std::endl;
+            Indent nextIndent = indent.inc();
+            for (auto packet : bundle) {
+                if (packet.isMessage()) {
+                    printMessage(out, packet, nextIndent);
+                } else {
+                    printBundle(out, packet, nextIndent);
+                }
+                out << std::endl;
+            }
+            out << indent << "]";
+        }
+
+        inline void printPacket(std::ostream& out, const Server::Packet& packet, const Indent& indent)
+        {
+            if (packet.isMessage()) {
+                printMessage(out, packet, indent);
+            } else {
+                printBundle(out, packet, indent);
             }
         }
     };
 
-    std::ostream& operator<<(std::ostream& out, const OSC::Server::Message& msg)
+    namespace Server
     {
-        out << msg.address() << ' ';
-        OSC::Server::ArgStream args(msg.args());
-        while (!args.atEnd()) {
-            const char t = args.tag();
-            out << t << ':';
-            switch (t) {
-                case 'i':
-                    out << args.int32();
-                    break;
-                case 'f':
-                    out << args.float32();
-                    break;
-                case 's':
-                    out << args.string();
-                    break;
-                case 'b':
-                    out << args.blob().size;
-                    break;
-                default:
-                    out << '?';
-                    break;
-            }
-            out << ' ';
+        std::ostream& operator<<(std::ostream& out, const Packet& packet)
+        {
+            detail::printPacket(out, packet, detail::Indent(detail::kDefaultIndentWidth));
+            return out;
         }
-    }
 
-    std::ostream& operator<<(std::ostream& out, const OSC::Server::Bundle& b)
-    {
-        for (auto p : b) {
-            if (p.isMessage())
-                out << (Message)p;
-            else
-                out << (Bundle)p;
+        std::ostream& operator<<(std::ostream& out, const Bundle& packet)
+        {
+            detail::printBundle(out, packet, detail::Indent(detail::kDefaultIndentWidth));
+            return out;
         }
-    }
 
-    std::ostream& operator<<(std::ostream& out, const OSC::Server::Packet& packet)
-    {
-        if (packet.isMessage()) {
-            out << packet;
-        } else {
-            OSC::Server::PacketStream ps(packet);
+        std::ostream& operator<<(std::ostream& out, const Message& packet)
+        {
+            detail::printMessage(out, packet, detail::Indent(detail::kDefaultIndentWidth));
+            return out;
         }
-        return out;
-    }
+    };
+
+    namespace Client
+    {
+        std::ostream& operator<<(std::ostream& out, const Packet& packet)
+        {
+            return out << OSC::Server::Packet(packet.data(), packet.size());
+        }
+    };
 };
 
 #endif // OSCPP_PRINT_HPP_INCLUDED
