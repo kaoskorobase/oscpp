@@ -284,7 +284,7 @@ namespace OSC
             checkWritable(4);
             checkAlignment(4);
             const int32_t x = *reinterpret_cast<int32_t*>(&f);
-            ref<float>() = convert32<NetworkByteOrder>(x);
+            ref<int32_t>() = convert32<NetworkByteOrder>(x);
             advance(4);
         }
 
