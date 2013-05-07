@@ -75,6 +75,15 @@ namespace Server
     class ArgStream
     {
     public:
+        //* Empty argument stream.
+        ArgStream() = default;
+
+        //* Construct argument stream from tag and value streams.
+        ArgStream(const ReadStream& tags, const ReadStream& args)
+            : m_tags(tags)
+            , m_args(args)
+        { }
+
         //! Constructor.
         /*!
          * Read arguments from stream, which has to point to the start of a
@@ -84,8 +93,8 @@ namespace Server
          * \throw OSC::ParseError error while parsing input stream.
          */
         ArgStream(const ReadStream& stream)
-            : m_args(stream)
         {
+            m_args = stream;
             const char* tags = m_args.getString();
             if (tags[0] != ',') throw ParseError("Tag string doesn't start with ','");
             m_tags = ReadStream(tags+1, strlen(tags)-1);
@@ -122,14 +131,7 @@ namespace Server
         //* Drop next argument.
         void drop()
         {
-            const char t = tag();
-            switch (t) {
-                case 'i': m_tags.skip(1); m_args.skip(4); break;
-                case 'f': m_tags.skip(1); m_args.skip(4); break;
-                case 's': m_tags.skip(1); m_args.getString(); break;
-                case 'b': blob(); break;
-                default: throw ParseError("Unknown type tag");
-            }
+            drop(m_tags.getChar());
         }
 
         //! Get next integer argument.
@@ -180,35 +182,93 @@ namespace Server
             throw ParseError("Cannot convert argument to string");
         }
 
-        //! Get next blob argument.
-        /*!
-         * Read next blob argument and return it as a NULL-terminated string.
-         *
-         * @throw OSC::UnderrunError stream buffer underrun.
-         * @throw OSC::ParseError argument is not a valid blob
-         */
+        //* Get next blob argument.
+        //
+        // @throw OSC::UnderrunError stream buffer underrun.
+        // @throw OSC::ParseError argument is not a valid blob
         Blob blob()
         {
             if (m_tags.getChar() == 'b') {
-                int32_t size = m_args.getInt32();
-                if (size < 0) {
-                    throw ParseError("Invalid blob size is less than zero");
-                } else {
-                    static_assert(sizeof(size_t) >= sizeof(int32_t),
-                                  "Size of size_t must be greater than size of int32_t");
-                    const void* data = m_args.pos();
-                    m_args.skip(OSC::align(size));
-                    return Blob { static_cast<size_t>(size)
-                                , data };
-                }
+                return parseBlob();
             } else {
                 throw ParseError("Cannot convert argument to blob");
             }
         }
 
+        //* Return a stream corresponding to an array argument.
+        ArgStream array()
+        {
+            if (m_tags.getChar() == '[') {
+                const byte_t* tags = m_tags.pos();
+                const byte_t* args = m_args.pos();
+                dropArray();
+                // m_tags.pos() points right after the closing ']'.
+                return ArgStream(ReadStream(tags, m_tags.pos() - tags - 1),
+                                 ReadStream(args, m_args.pos() - args));
+            } else {
+                throw ParseError("Expected array");
+            }
+        }
+
+        template <typename T> T next()
+        {
+            return T::OSC_Server_ArgStream_next_unimplemented;
+        }
+
     private:
-        ReadStream m_args;
+        // Parse a blob (type tag already consumed).
+        Blob parseBlob()
+        {
+            int32_t size = m_args.getInt32();
+            if (size < 0) {
+                throw ParseError("Invalid blob size is less than zero");
+            } else {
+                static_assert(sizeof(size_t) >= sizeof(int32_t),
+                              "Size of size_t must be greater than size of int32_t");
+                const void* data = m_args.pos();
+                m_args.skip(OSC::align(size));
+                return Blob { static_cast<size_t>(size)
+                            , data };
+            }
+        }
+        // Drop an atomic value of type t (type tag already consumed).
+        void dropAtom(char t)
+        {
+            switch (t) {
+                case 'i': m_args.skip(4); break;
+                case 'f': m_args.skip(4); break;
+                case 's': m_args.getString(); break;
+                case 'b': parseBlob(); break;
+            }
+        }
+        // Drop a possibly nested array.
+        void dropArray()
+        {
+            unsigned int level = 0;
+            for (;;) {
+                char t = m_tags.getChar();
+                if (t == ']') {
+                    if (level == 0) break;
+                    else level--;
+                } else if (t == '[') {
+                    level++;
+                } else {
+                    dropAtom(t);
+                }
+            }
+        }
+        // Drop the next argument of type t (type tag already consumed).
+        void drop(char t)
+        {
+            switch (t) {
+                case '[': dropArray(); break;
+                default: dropAtom(t);
+            }
+        }
+
+    private:
         ReadStream m_tags;
+        ReadStream m_args;
     };
 
     class Message

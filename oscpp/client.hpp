@@ -227,6 +227,40 @@ namespace Client
             return *this;
         }
 
+        Packet& openArray()
+        {
+            m_tags.putChar('[');
+            return *this;
+        }
+
+        Packet& closeArray()
+        {
+            m_tags.putChar(']');
+            return *this;
+        }
+
+        template <typename T> Packet& put(T)
+        {
+            T::OSC_Client_Packet_put_unimplemented;
+            return *this;
+        }
+
+        template <typename InputIterator> Packet& put(InputIterator begin, InputIterator end)
+        {
+            for (auto it = begin; it != end; it++) {
+                put(*it);
+            }
+            return *this;
+        }
+
+        template <typename InputIterator> Packet& putArray(InputIterator begin, InputIterator end)
+        {
+            openArray();
+            put<InputIterator>(begin, end);
+            closeArray();
+            return *this;
+        }
+
     private:
         void*       m_buffer;
         size_t      m_capacity;
@@ -236,6 +270,11 @@ namespace Client
         void*       m_sizePosB;     // last bundle size position
         size_t      m_inBundle;     // bundle nesting depth
     };
+
+    template <> Packet& Packet::put<int32_t>(int32_t x) { return int32(x); }
+    template <> Packet& Packet::put<float>(float x) { return float32(x); }
+    template <> Packet& Packet::put<const char*>(const char* x) { return string(x); }
+    template <> Packet& Packet::put<const Blob&>(const Blob& x) { return blob(x); }
 
     template <size_t buffer_size> class StaticPacket : public Packet
     {
