@@ -26,6 +26,7 @@
 #define OSCPP_SERVER_HPP_INCLUDED
 
 #include <oscpp/stream.hpp>
+#include <oscpp/util.hpp>
 
 #include <algorithm>
 #include <cstdint>

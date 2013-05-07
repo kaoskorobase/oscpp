@@ -28,6 +28,7 @@
 #include <oscpp/error.hpp>
 #include <oscpp/host.hpp>
 #include <oscpp/types.hpp>
+#include <oscpp/util.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -36,66 +37,6 @@
 
 namespace OSC
 {
-    static const size_t kAlignment = 4;
-
-    inline bool isAligned(const void* ptr, size_t alignment)
-    {
-        return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
-    }
-
-    constexpr bool isAligned(size_t n)
-    {
-        return (n & 3) == 0;
-    }
-
-    constexpr size_t align(size_t n)
-    {
-        return (n + 3) & -4;
-    }
-
-    constexpr size_t padding(size_t n)
-    {
-        return align(n) - n;
-    }
-
-    inline void checkAlignment(const void* ptr, size_t n)
-    {
-        assert( isAligned(ptr, n) );
-    }
-
-    namespace Size
-    {
-        template <size_t N> constexpr size_t string(char const (&a)[N])
-        {
-            return align(N);
-        }
-
-        template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
-        {
-            return string(address) + align(numArgs+2);
-        }
-
-        constexpr size_t int32()
-        {
-            return 4;
-        }
-
-        constexpr size_t float32()
-        {
-            return 4;
-        }
-
-        constexpr size_t string(size_t n)
-        {
-            return align(n+1);
-        }
-
-        constexpr size_t blob(size_t n)
-        {
-            return 4 + align(n);
-        }
-    };
-
     class Stream
     {
     public:

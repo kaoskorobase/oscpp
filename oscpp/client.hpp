@@ -27,6 +27,7 @@
 
 #include <oscpp/host.hpp>
 #include <oscpp/stream.hpp>
+#include <oscpp/util.hpp>
 
 #include <cstdint>
 #include <limits>
