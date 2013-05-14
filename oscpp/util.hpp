@@ -25,6 +25,8 @@
 #ifndef OSCPP_UTIL_HPP_INCLUDED
 #define OSCPP_UTIL_HPP_INCLUDED
 
+#include <cassert>
+
 namespace OSC
 {
     static const size_t kAlignment = 4;
