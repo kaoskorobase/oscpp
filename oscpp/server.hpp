@@ -112,6 +112,12 @@ namespace Server
             return m_tags.atEnd();
         }
 
+        //* Return tag and argument streams.
+        std::tuple<ReadStream,ReadStream> state() const
+        {
+            return std::make_tuple(m_tags, m_args);
+        }
+
         //* Return the type tag corresponding to the next message argument.
         char tag() const
         {
