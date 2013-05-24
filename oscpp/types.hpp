@@ -32,7 +32,7 @@ namespace OSC
         size_t      size;
         const void* data;
     };
-    
+
     typedef char byte_t;
 };
 

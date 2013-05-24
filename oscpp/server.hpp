@@ -414,8 +414,11 @@ namespace Server
     private:
         size_t getPacket()
         {
-            const size_t size = m_stream.peekInt32();
-            m_packet = Packet(ReadStream(m_stream, size));
+            ReadStream stream(m_stream);
+            const int32_t size = stream.getInt32();
+            if (size <= 0)
+                throw ParseError("Invalid packet size");
+            m_packet = Packet(ReadStream(stream, size));
             return sizeof(int32_t) + size;
         }
 
