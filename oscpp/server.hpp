@@ -332,6 +332,16 @@ namespace Server
             : Packet(ReadStream(data, size))
         { }
 
+        const void* data() const
+        {
+            return m_stream.begin();
+        }
+
+        size_t size() const
+        {
+            return m_stream.capacity();
+        }
+
         bool isBundle() const
         {
             return m_isBundle;
