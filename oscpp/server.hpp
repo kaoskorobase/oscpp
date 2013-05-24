@@ -280,7 +280,7 @@ namespace Server
             return m_address;
         }
 
-        const ArgStream& args() const
+        ArgStream args() const
         {
             return m_args;
         }
