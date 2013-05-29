@@ -305,8 +305,8 @@ namespace Server
             return m_time;
         }
 
-        PacketIterator begin() const;
-        PacketIterator end() const;
+        inline PacketIterator begin() const;
+        inline PacketIterator end() const;
 
     private:
         uint64_t   m_time;
@@ -427,27 +427,27 @@ namespace Server
         size_t     m_skip;
     };
 
-    template <> int32_t ArgStream::next<int32_t>()
+    template <> inline int32_t ArgStream::next<int32_t>()
     {
         return int32();
     }
 
-    template <> float ArgStream::next<float>()
+    template <> inline float ArgStream::next<float>()
     {
         return float32();
     }
 
-    template <> const char* ArgStream::next<const char*>()
+    template <> inline const char* ArgStream::next<const char*>()
     {
         return string();
     }
 
-    template <> Blob ArgStream::next<Blob>()
+    template <> inline Blob ArgStream::next<Blob>()
     {
         return blob();
     }
 
-    template <> ArgStream ArgStream::next<ArgStream>()
+    template <> inline ArgStream ArgStream::next<ArgStream>()
     {
         return array();
     }

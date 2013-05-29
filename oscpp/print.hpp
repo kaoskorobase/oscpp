@@ -127,19 +127,19 @@ namespace OSC
 
     namespace Server
     {
-        std::ostream& operator<<(std::ostream& out, const Packet& packet)
+        inline std::ostream& operator<<(std::ostream& out, const Packet& packet)
         {
             detail::printPacket(out, packet, detail::Indent(detail::kDefaultIndentWidth));
             return out;
         }
 
-        std::ostream& operator<<(std::ostream& out, const Bundle& packet)
+        inline std::ostream& operator<<(std::ostream& out, const Bundle& packet)
         {
             detail::printBundle(out, packet, detail::Indent(detail::kDefaultIndentWidth));
             return out;
         }
 
-        std::ostream& operator<<(std::ostream& out, const Message& packet)
+        inline std::ostream& operator<<(std::ostream& out, const Message& packet)
         {
             detail::printMessage(out, packet, detail::Indent(detail::kDefaultIndentWidth));
             return out;
@@ -148,7 +148,7 @@ namespace OSC
 
     namespace Client
     {
-        std::ostream& operator<<(std::ostream& out, const Packet& packet)
+        inline std::ostream& operator<<(std::ostream& out, const Packet& packet)
         {
             return out << OSC::Server::Packet(packet.data(), packet.size());
         }
