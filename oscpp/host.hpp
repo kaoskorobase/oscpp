@@ -75,9 +75,9 @@ namespace OSC
         HostByteOrder
     };
 
-    template<ByteOrder B> inline uint32_t convert32(uint32_t x)
+    template<ByteOrder B> inline uint32_t convert32(uint32_t)
     {
-        // static_assert(false, "Unknown ByteOrder");
+        throw std::runtime_error("Invalid byte order");
     }
 
     template<> inline uint32_t convert32<NetworkByteOrder>(uint32_t x)
@@ -94,9 +94,9 @@ namespace OSC
         return x;
     }
 
-    template<ByteOrder B> inline uint64_t convert64(uint64_t x)
+    template<ByteOrder B> inline uint64_t convert64(uint64_t)
     {
-        // static_assert(false, "Unknown ByteOrder");
+        throw std::runtime_error("Invalid byte order");
     }
 
     template<> inline uint64_t convert64<NetworkByteOrder>(uint64_t x)

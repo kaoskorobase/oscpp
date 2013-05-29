@@ -53,12 +53,14 @@ namespace OSC
 
     inline void checkAlignment(const void* ptr, size_t n)
     {
-        assert( isAligned(ptr, n) );
+        if (!isAligned(ptr, n)) {
+            throw std::runtime_error("Unaligned pointer");
+        }
     }
 
     namespace Size
     {
-        template <size_t N> constexpr size_t string(char const (&a)[N])
+        template <size_t N> constexpr size_t string(char const (&)[N])
         {
             return align(N);
         }
