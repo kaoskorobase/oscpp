@@ -461,8 +461,8 @@ namespace Server
     {
         return PacketIterator(ReadStream(m_stream.end(), 0));
     }
-}; // namespace Server
-}; // namespace OSC
+} // namespace Server
+} // namespace OSC
 
 static inline bool operator==(const OSC::Server::Message& msg, const char* str)
 {

@@ -56,7 +56,7 @@ namespace OSC
             : Error(std::string("Buffer underrun"))
         { }
     };
-    
+
     class OverflowError : public Error
     {
     public:
@@ -70,7 +70,7 @@ namespace OSC
     private:
         size_t m_bytes;
     };
-    
+
     class ParseError : public Error
     {
     public:
@@ -78,6 +78,6 @@ namespace OSC
             : Error(what)
         { }
     };
-};    
+}
 
 #endif // OSCPP_ERROR_HPP_INCLUDED

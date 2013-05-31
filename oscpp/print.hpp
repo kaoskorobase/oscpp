@@ -123,7 +123,7 @@ namespace OSC
                 printBundle(out, packet, indent);
             }
         }
-    };
+    }
 
     namespace Server
     {
@@ -144,7 +144,7 @@ namespace OSC
             detail::printMessage(out, packet, detail::Indent(detail::kDefaultIndentWidth));
             return out;
         }
-    };
+    }
 
     namespace Client
     {
@@ -152,7 +152,7 @@ namespace OSC
         {
             return out << OSC::Server::Packet(packet.data(), packet.size());
         }
-    };
-};
+    }
+}
 
 #endif // OSCPP_PRINT_HPP_INCLUDED

@@ -95,7 +95,7 @@ namespace OSC
         {
             return 4 + align(n);
         }
-    };
-};
+    }
+}
 
 #endif // OSCPP_UTIL_HPP_INCLUDED

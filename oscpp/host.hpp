@@ -112,6 +112,6 @@ namespace OSC
     {
         return x;
     }
-};
+}
 
 #endif // OSCPP_HOST_HPP_INCLUDED

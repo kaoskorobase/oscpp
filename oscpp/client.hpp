@@ -300,7 +300,7 @@ namespace Client
             delete [] static_cast<char*>(data());
         }
     };
-}; // namespace Client
-}; // namespace OSC
+} // namespace Client
+} // namespace OSC
 
 #endif // OSCPP_CLIENT_HPP_INCLUDED

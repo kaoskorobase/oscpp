@@ -34,6 +34,6 @@ namespace OSC
     };
 
     typedef char byte_t;
-};
+}
 
 #endif // OSCPP_TYPES_HPP_INCLUDED

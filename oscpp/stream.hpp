@@ -351,6 +351,6 @@ namespace OSC
             return x;
         }
     };
-}; // namespace OSC
+} // namespace OSC
 
 #endif // OSCPP_STREAM_HPP_INCLUDED
