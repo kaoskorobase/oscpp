@@ -288,7 +288,7 @@ namespace Client
         AlignedBuffer m_buffer;
     };
 
-    template class DynamicPacket : public Packet
+    class DynamicPacket : public Packet
     {
     public:
         DynamicPacket(size_t buffer_size)
