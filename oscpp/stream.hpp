@@ -192,7 +192,7 @@ namespace OSC
         void zero(size_t n)
         {
             checkWritable(n);
-            memset(m_pos, 0, n);
+            std::memset(m_pos, 0, n);
             advance(n);
         }
 
@@ -224,7 +224,8 @@ namespace OSC
         {
             checkWritable(4);
             checkAlignment(4);
-            const int32_t x = *reinterpret_cast<int32_t*>(&f);
+            int32_t x;
+            std::memcpy(&x, &f, 4);
             ref<int32_t>() = convert32<NetworkByteOrder>(x);
             advance(4);
         }
@@ -328,7 +329,9 @@ namespace OSC
             checkAlignment(4);
             uint32_t x = convert32<NetworkByteOrder>(ref<uint32_t>());
             advance(4);
-            return *reinterpret_cast<float*>(&x);
+            float f;
+            std::memcpy(&f, &x, 4);
+            return f;
         }
 
         // throw (UnderrunError, ParseError) 
