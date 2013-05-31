@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <oscpp/endian.hpp>
+#include <stdexcept>
 
 namespace OSC
 {
@@ -77,7 +78,7 @@ namespace OSC
 
     template<ByteOrder B> inline uint32_t convert32(uint32_t)
     {
-        throw std::runtime_error("Invalid byte order");
+        throw std::logic_error("Invalid byte order");
     }
 
     template<> inline uint32_t convert32<NetworkByteOrder>(uint32_t x)
@@ -96,7 +97,7 @@ namespace OSC
 
     template<ByteOrder B> inline uint64_t convert64(uint64_t)
     {
-        throw std::runtime_error("Invalid byte order");
+        throw std::logic_error("Invalid byte order");
     }
 
     template<> inline uint64_t convert64<NetworkByteOrder>(uint64_t x)
