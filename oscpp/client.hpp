@@ -219,11 +219,11 @@ namespace Client
         // @throw std::invalid_argument if blob size is greater than std::numeric_limits<int32_t>::max()
         Packet& blob(const Blob& arg)
         {
-            if (arg.size > (size_t)std::numeric_limits<int32_t>::max())
+            if (arg.size() > (size_t)std::numeric_limits<int32_t>::max())
                 throw std::invalid_argument("Blob size greater than maximum value representable by int32_t");
             m_tags.putChar('b');
-            m_args.putInt32(arg.size);
-            m_args.putData(arg.data, arg.size);
+            m_args.putInt32(arg.size());
+            m_args.putData(arg.data(), arg.size());
             return *this;
         }
 

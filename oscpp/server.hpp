@@ -223,8 +223,7 @@ namespace Server
                               "Size of size_t must be greater than size of int32_t");
                 const void* data = m_args.pos();
                 m_args.skip(OSC::align(size));
-                return Blob { static_cast<size_t>(size)
-                            , data };
+                return Blob(data, static_cast<size_t>(size));
             }
         }
         // Drop an atomic value of type t (type tag already consumed).

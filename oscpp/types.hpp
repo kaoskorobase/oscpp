@@ -27,10 +27,23 @@
 
 namespace OSC
 {
-    struct Blob
+    class Blob
     {
-        size_t      size;
-        const void* data;
+    public:
+        Blob()
+            : m_size(0), m_data(nullptr)
+        { }
+        Blob(const void* data, size_t size)
+            : m_size(size), m_data(data)
+        { }
+        Blob(const Blob& other) = default;
+
+        size_t size() const { return m_size; }
+        const void* data() const { return m_data; }
+
+    private:
+        size_t      m_size;
+        const void* m_data;
     };
 
     typedef char byte_t;

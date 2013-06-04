@@ -78,7 +78,7 @@ namespace OSC
                         out << "s:" << args.string();
                         break;
                     case 'b':
-                        out << "b:" << args.blob().size;
+                        out << "b:" << args.blob().size();
                         break;
                     case '[':
                         out << "[ ";
