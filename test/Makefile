@@ -1,14 +1,14 @@
-HEADERS = ../oscpp/client.hpp \
-	  ../oscpp/error.hpp \
-	  ../oscpp/host.hpp \
-	  ../oscpp/server.hpp \
-	  ../oscpp/stream.hpp \
-	  ../oscpp/types.hpp
-SOURCES = oscpp_test.cpp
-CXXFLAGS = -I../ -O2
+OS := $(shell uname -s)
+HEADERS = $(wildcard ../oscpp/*.hpp)
+CXXFLAGS = -I.. -Iautocheck/include -O2 -std=c++11 -stdlib=libc++
 
-oscpp_test: $(HEADERS) $(SOURCES)
-	$(CXX) -o $@ $(CXXFLAGS) $(SOURCES)
+all: oscpp_autocheck
+
+oscpp_test: $(HEADERS) oscpp_test.cpp
+	$(CXX) -o $@ $(CXXFLAGS) oscpp_test.cpp
+
+oscpp_autocheck: $(HEADERS) oscpp_autocheck.cpp
+	$(CXX) -o $@ $(CXXFLAGS) oscpp_autocheck.cpp
 
 clean:
-	rm -f oscpp_test
+	rm -f oscpp_autocheck oscpp_test
