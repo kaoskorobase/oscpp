@@ -89,13 +89,22 @@ namespace OSC
             return align(N);
         }
 
-        constexpr size_t array(size_t numElems)
+        inline size_t string(const char* x)
         {
-            // [numElems]
-            return numElems+2;
+            return align(strlen(x)+1);
+        }
+
+        constexpr size_t bundle(size_t numPackets)
+        {
+            return 8 /* #bundle */ + 8 /* timestamp */ + 4 * numPackets /* size prefix */;
         }
 
         template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
+        {
+            return string(address) + align(numArgs+2);
+        }
+
+        inline size_t message(const char* address, size_t numArgs)
         {
             return string(address) + align(numArgs+2);
         }
@@ -115,9 +124,9 @@ namespace OSC
             return align(n+1);
         }
 
-        constexpr size_t blob(size_t n)
+        constexpr size_t blob(size_t size)
         {
-            return 4 + align(n);
+            return 4 + align(size);
         }
     }
 }
