@@ -1,7 +1,7 @@
 DEBUG := 1
 OPT := 1
 
-HEADERS := $(wildcard ../oscpp/*.hpp) $(wildcard ../oscpp/detail/*.hpp)
+HEADERS := $(wildcard ../include/oscpp/*.hpp) $(wildcard ../include/oscpp/detail/*.hpp)
 AUTOCHECK_HEADERS := $(wildcard autocheck/include/autocheck/*.hpp)
 
 ifeq ($(DEBUG),1)
@@ -17,7 +17,7 @@ endif
 CXXFLAGS = \
 	-std=c++11 -stdlib=libc++ \
 	-Wall -Wextra -Wno-unused-parameter \
-	-I.. -Iautocheck/include \
+	-I../include -Iautocheck/include \
 	$(CXXFLAGS_DEBUG) \
 	$(CXXFLAGS_OPT)
 

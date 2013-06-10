@@ -283,7 +283,7 @@ namespace Server
             return m_time;
         }
 
-        PacketStream packets() const;
+        inline PacketStream packets() const;
 
     private:
         uint64_t   m_time;
