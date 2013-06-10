@@ -1,10 +1,12 @@
 #include <autocheck/autocheck.hpp>
-#include <oscpp/client.hpp>
-#include <oscpp/server.hpp>
 #include <cstdint>
 #include <list>
 #include <memory>
 #include <string>
+
+#include <oscpp/client.hpp>
+#include <oscpp/print.hpp>
+#include <oscpp/server.hpp>
 
 namespace oscpp { namespace ast {
     class Value

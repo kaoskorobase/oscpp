@@ -104,7 +104,9 @@ namespace OSC
         {
             out << indent << "# " << bundle.time() << " [" << std::endl;
             Indent nextIndent = indent.inc();
-            for (auto packet : bundle) {
+            auto packets = bundle.packets();
+            while (!packets.atEnd()) {
+                auto packet = packets.next();
                 if (packet.isMessage()) {
                     printMessage(out, packet, nextIndent);
                 } else {
