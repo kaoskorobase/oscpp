@@ -84,14 +84,30 @@ namespace OSC
 
     namespace Size
     {
+        class String
+        {
+        public:
+            String(const char* x)
+                : m_value(x)
+            {}
+
+            operator const char* () const
+            {
+                return m_value;
+            }
+
+        private:
+            const char* m_value;
+        };
+
+        inline size_t string(const String& x)
+        {
+            return align(strlen(x)+1);
+        }
+
         template <size_t N> constexpr size_t string(char const (&)[N])
         {
             return align(N);
-        }
-
-        inline size_t string(const char* x)
-        {
-            return align(strlen(x)+1);
         }
 
         constexpr size_t bundle(size_t numPackets)
@@ -99,14 +115,14 @@ namespace OSC
             return 8 /* #bundle */ + 8 /* timestamp */ + 4 * numPackets /* size prefix */;
         }
 
-        template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
+        inline size_t message(const String& address, size_t numArgs)
         {
-            return string(address) + align(numArgs+2);
+            return string(address) + align(numArgs + 2);
         }
 
-        inline size_t message(const char* address, size_t numArgs)
+        template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
         {
-            return string(address) + align(numArgs+2);
+            return string(address) + align(numArgs + 2);
         }
 
         constexpr size_t int32()
@@ -121,7 +137,7 @@ namespace OSC
 
         constexpr size_t string(size_t n)
         {
-            return align(n+1);
+            return align(n + 1);
         }
 
         constexpr size_t blob(size_t size)

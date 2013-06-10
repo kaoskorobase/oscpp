@@ -219,7 +219,7 @@ namespace oscpp { namespace ast {
             size_t payload = 0;
             for (auto x : m_args) payload += x->size();
             assert(OSC::isAligned(payload));
-            return OSC::Size::message(m_address.c_str(), Argument::numTags(m_args)) + payload;
+            return OSC::Size::message(OSC::Size::String(m_address.c_str()), Argument::numTags(m_args)) + payload;
         }
 
     protected:
@@ -320,7 +320,7 @@ namespace oscpp { namespace ast {
 
         size_t size() const override
         {
-            return OSC::Size::string(m_value.c_str());
+            return OSC::Size::string(OSC::Size::String(m_value.c_str()));
         }
 
     protected:
