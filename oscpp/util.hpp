@@ -58,6 +58,30 @@ namespace OSC
         }
     }
 
+    namespace Tags
+    {
+        constexpr size_t int32()
+        {
+            return 1;
+        }
+        constexpr size_t float32()
+        {
+            return 1;
+        }
+        constexpr size_t string()
+        {
+            return 1;
+        }
+        constexpr size_t blob()
+        {
+            return 1;
+        }
+        constexpr size_t array(size_t numElems)
+        {
+            return numElems+2;
+        }
+    };
+
     namespace Size
     {
         template <size_t N> constexpr size_t string(char const (&)[N])
