@@ -44,9 +44,10 @@ namespace Client
      */
     class Packet
     {
-        int32_t calcSize(void* begin, void* end)
+        int32_t calcSize(const char* begin, const char* end)
         {
-            return static_cast<byte_t*>(end) - static_cast<byte_t*>(begin) - 4;
+            // TODO: Make sure pointer difference fits into int32_t
+            return end - begin - 4;
         }
 
     public:
@@ -99,7 +100,7 @@ namespace Client
             m_buffer = buffer;
             m_capacity = size;
             m_args = WriteStream(m_buffer, m_capacity);
-            m_sizePosM = m_sizePosB = 0;
+            m_sizePosM = m_sizePosB = nullptr;
             m_inBundle = 0;
         }
 
@@ -110,17 +111,19 @@ namespace Client
 
         Packet& openBundle(uint64_t time)
         {
-            if (m_inBundle) {
-                // get current stream pos
-                void* curPos = m_args.pos();
-                // remember previous size pos offset
-                *(int32_t*)curPos =
-                      static_cast<byte_t*>(m_sizePosB)
-                    - static_cast<byte_t*>(m_args.begin());
+            if (m_inBundle > 0) {
+                // Remember previous size pos offset
+                // TODO: Make sure pointer difference fits into int32_t
+                const int32_t offset = m_sizePosB - m_args.begin();
+                char* curPos = m_args.pos();
                 m_args.skip(4);
-                // record size pos
+                // Record size pos
+                std::memcpy(curPos, &offset, 4);
                 m_sizePosB = curPos;
+            } else if (m_args.pos() != m_args.begin()) {
+                throw std::logic_error("Cannot open toplevel bundle in non-empty packet");
             }
+
             m_inBundle++;
             m_args.putString("#bundle");
             m_args.putUInt64(time);
@@ -131,30 +134,35 @@ namespace Client
         {
             if (m_inBundle > 0) {
                 if (m_inBundle > 1) {
-                    // get current stream pos
-                    byte_t* curPos = static_cast<byte_t*>(m_args.pos());
-                    // get previous size pos
-                    void* prevPos =
-                          static_cast<byte_t*>(m_args.begin())
-                        + *(int32_t*)m_sizePosB;
-                    // write bundle size
+                    // Get current stream pos
+                    char* curPos = m_args.pos();
+
+                    // Get previous bundle size stream pos
+                    int32_t offset;
+                    memcpy(&offset, m_sizePosB, 4);
+                    // Get previous size pos
+                    char* prevPos = m_args.begin() + offset;
+
+                    const int32_t bundleSize = calcSize(m_sizePosB, curPos);
+                    assert(bundleSize >= 0 && (size_t)bundleSize >= Size::bundle(0));
+                    // Write bundle size
                     m_args.setPos(m_sizePosB);
-                    m_args.putInt32(calcSize(m_sizePosB, curPos));
-                    // restore stream pos
+                    m_args.putInt32(bundleSize);
                     m_args.setPos(curPos);
+
                     // record outer bundle size pos
                     m_sizePosB = prevPos;
                 }
                 m_inBundle--;
             } else {
-                throw UnderrunError();
+                throw std::logic_error("closeBundle() without matching openBundle()");
             }
             return *this;
         }
 
         Packet& openMessage(const char* addr, size_t numArgs)
         {
-            if (m_inBundle) {
+            if (m_inBundle > 0) {
                 // record message size pos
                 m_sizePosM = m_args.pos();
                 // advance arg stream
@@ -170,9 +178,9 @@ namespace Client
 
         Packet& closeMessage()
         {
-            if (m_inBundle) {
-                // get current stream pos
-                byte_t* curPos = static_cast<byte_t*>(m_args.pos());
+            if (m_inBundle > 0) {
+                // Get current stream pos
+                char* curPos = m_args.pos();
                 // write message size
                 m_args.setPos(m_sizePosM);
                 m_args.putInt32(calcSize(m_sizePosM, curPos));
@@ -266,8 +274,8 @@ namespace Client
         size_t      m_capacity;
         WriteStream m_args;         // packet stream
         WriteStream m_tags;         // current tag stream
-        void*       m_sizePosM;     // last message size position
-        void*       m_sizePosB;     // last bundle size position
+        char*       m_sizePosM;     // last message size position
+        char*       m_sizePosB;     // last bundle size position
         size_t      m_inBundle;     // bundle nesting depth
     };
 
@@ -280,7 +288,7 @@ namespace Client
     {
     public:
         StaticPacket()
-            : Packet(reinterpret_cast<byte_t*>(&m_buffer), buffer_size)
+            : Packet(reinterpret_cast<char*>(&m_buffer), buffer_size)
         { }
 
     private:
@@ -292,7 +300,7 @@ namespace Client
     {
     public:
         DynamicPacket(size_t buffer_size)
-            : Packet(static_cast<byte_t*>(new char[buffer_size]), buffer_size)
+            : Packet(static_cast<char*>(new char[buffer_size]), buffer_size)
         { }
 
         ~DynamicPacket()

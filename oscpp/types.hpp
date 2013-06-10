@@ -45,8 +45,6 @@ namespace OSC
         size_t      m_size;
         const void* m_data;
     };
-
-    typedef char byte_t;
 }
 
 #endif // OSCPP_TYPES_HPP_INCLUDED

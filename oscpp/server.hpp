@@ -195,8 +195,8 @@ namespace Server
         ArgStream array()
         {
             if (m_tags.getChar() == '[') {
-                const byte_t* tags = m_tags.pos();
-                const byte_t* args = m_args.pos();
+                const char* tags = m_tags.pos();
+                const char* args = m_args.pos();
                 dropArray();
                 // m_tags.pos() points right after the closing ']'.
                 return ArgStream(ReadStream(tags, m_tags.pos() - tags - 1),
