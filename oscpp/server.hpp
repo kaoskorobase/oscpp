@@ -36,27 +36,6 @@ namespace OSC
 {
 namespace Server
 {
-    class PacketTest
-    {
-    public:
-        static bool isMessage(const void* data, size_t size)
-        {
-            return (size > 3) && (static_cast<const char*>(data)[0] != '#');
-        }
-        static bool isMessage(const ReadStream& stream)
-        {
-            return isMessage(stream.pos(), stream.consumable());
-        }
-        static bool isBundle(const void* data, size_t size)
-        {
-            return (size > 15) && (memcmp(data, "#bundle", 8) == 0);
-        }
-        static bool isBundle(const ReadStream& stream)
-        {
-            return isBundle(stream.pos(), stream.consumable());
-        }
-    };
-
     //! OSC Message Argument Iterator.
     /*!
      * Retrieve typed arguments from an incoming message.
@@ -289,7 +268,7 @@ namespace Server
         ArgStream   m_args;
     };
     
-    class PacketIterator;
+    class PacketStream;
 
     class Bundle
     {
@@ -304,8 +283,7 @@ namespace Server
             return m_time;
         }
 
-        inline PacketIterator begin() const;
-        inline PacketIterator end() const;
+        PacketStream packets() const;
 
     private:
         uint64_t   m_time;
@@ -321,7 +299,7 @@ namespace Server
 
         Packet(const ReadStream& stream)
             : m_stream(stream)
-            , m_isBundle(PacketTest::isBundle(stream))
+            , m_isBundle(isBundle(stream))
         {
             // Skip over #bundle header
             if (m_isBundle) m_stream.skip(8);
@@ -367,63 +345,54 @@ namespace Server
             return Message(address, std::move(stream));
         }
 
+        static bool isMessage(const void* data, size_t size)
+        {
+            return (size > 3) && (static_cast<const char*>(data)[0] != '#');
+        }
+
+        static bool isMessage(const ReadStream& stream)
+        {
+            return isMessage(stream.pos(), stream.consumable());
+        }
+
+        static bool isBundle(const void* data, size_t size)
+        {
+            return (size > 15) && (std::memcmp(data, "#bundle", 8) == 0);
+        }
+
+        static bool isBundle(const ReadStream& stream)
+        {
+            return isBundle(stream.pos(), stream.consumable());
+        }
+
     private:
         ReadStream m_stream;
         bool       m_isBundle;
     };
-    
-    class PacketIterator
+
+
+    class PacketStream
     {
     public:
-        PacketIterator(const ReadStream& stream)
+        PacketStream(const ReadStream& stream)
             : m_stream(stream)
-            , m_skip(0)
+        { }
+
+        bool atEnd() const
         {
-            if (!m_stream.atEnd())
-                m_skip = getPacket();
+            return m_stream.atEnd();
         }
 
-        PacketIterator& operator++()
+        Packet next()
         {
-            m_stream.skip(m_skip);
-            if (m_stream.atEnd())
-                m_skip = 0;
-            else
-                m_skip = getPacket();
-            return *this;
-        }
-
-        bool operator==(const PacketIterator& it)
-        {
-            return m_stream.pos() == it.m_stream.pos();
-        }
-
-        bool operator!=(const PacketIterator& it)
-        {
-            return m_stream.pos() != it.m_stream.pos();
-        }
-
-        const Packet& operator*()
-        {
-            if (m_stream.atEnd())
-                throw ParseError("Trying to read past end of packet");
-            return m_packet;
+            size_t size = m_stream.getInt32();
+            ReadStream stream(m_stream, size);
+            m_stream.skip(size);
+            return Packet(stream);
         }
 
     private:
-        size_t getPacket()
-        {
-            ReadStream stream(m_stream);
-            const int32_t size = stream.getInt32();
-            if (size <= 0)
-                throw ParseError("Invalid packet size");
-            m_packet = Packet(ReadStream(stream, size));
-            return sizeof(int32_t) + size;
-        }
-
         ReadStream m_stream;
-        Packet     m_packet;
-        size_t     m_skip;
     };
 
     template <> inline int32_t ArgStream::next<int32_t>()
@@ -451,14 +420,9 @@ namespace Server
         return array();
     }
 
-    PacketIterator Bundle::begin() const
+    PacketStream Bundle::packets() const
     {
-        return PacketIterator(m_stream);
-    }
-
-    PacketIterator Bundle::end() const
-    {
-        return PacketIterator(ReadStream(m_stream.end(), 0));
+        return PacketStream(m_stream);
     }
 } // namespace Server
 } // namespace OSC
