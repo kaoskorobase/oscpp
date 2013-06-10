@@ -1,5 +1,6 @@
 OS := $(shell uname -s)
-HEADERS = $(wildcard ../oscpp/*.hpp) $(wildcard ../oscpp/detail/*.hpp)
+HEADERS := $(wildcard ../oscpp/*.hpp) $(wildcard ../oscpp/detail/*.hpp)
+AUTOCHECK_HEADERS := $(wildcard autocheck/include/autocheck/*.hpp)
 CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -I.. -Iautocheck/include -O2 -g -std=c++11 -stdlib=libc++
 
 all: oscpp_autocheck
