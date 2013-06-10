@@ -12,4 +12,4 @@ oscpp_autocheck: $(HEADERS) oscpp_autocheck.cpp
 	$(CXX) -o $@ $(CXXFLAGS) oscpp_autocheck.cpp
 
 clean:
-	rm -f oscpp_autocheck oscpp_test
+	rm -rf oscpp_autocheck oscpp_autocheck.dSYM
