@@ -282,7 +282,7 @@ namespace Client
     template <> inline Packet& Packet::put<int32_t>(int32_t x) { return int32(x); }
     template <> inline Packet& Packet::put<float>(float x) { return float32(x); }
     template <> inline Packet& Packet::put<const char*>(const char* x) { return string(x); }
-    template <> inline Packet& Packet::put<const Blob&>(const Blob& x) { return blob(x); }
+    template <> inline Packet& Packet::put<Blob>(Blob x) { return blob(x); }
 
     template <size_t buffer_size> class StaticPacket : public Packet
     {
