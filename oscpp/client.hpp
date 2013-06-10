@@ -160,7 +160,7 @@ namespace Client
             return *this;
         }
 
-        Packet& openMessage(const char* addr, size_t numArgs)
+        Packet& openMessage(const char* addr, size_t numTags)
         {
             if (m_inBundle > 0) {
                 // record message size pos
@@ -169,7 +169,7 @@ namespace Client
                 m_args.skip(4);
             }
             m_args.putString(addr);
-            size_t sigLen = numArgs+2;
+            size_t sigLen = numTags + 2;
             m_tags = WriteStream(m_args, sigLen);
             m_args.zero(OSC::align(sigLen));
             m_tags.putChar(',');
