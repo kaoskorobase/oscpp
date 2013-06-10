@@ -25,8 +25,8 @@
 #ifndef OSCPP_CLIENT_HPP_INCLUDED
 #define OSCPP_CLIENT_HPP_INCLUDED
 
-#include <oscpp/host.hpp>
-#include <oscpp/stream.hpp>
+#include <oscpp/detail/host.hpp>
+#include <oscpp/detail/stream.hpp>
 #include <oscpp/util.hpp>
 
 #include <cstdint>

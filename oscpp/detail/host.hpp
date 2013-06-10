@@ -26,7 +26,7 @@
 #define OSCPP_HOST_HPP_INCLUDED
 
 #include <cstdint>
-#include <oscpp/endian.hpp>
+#include <oscpp/detail/endian.hpp>
 #include <stdexcept>
 
 namespace OSC

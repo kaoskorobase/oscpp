@@ -25,7 +25,7 @@
 #ifndef OSCPP_SERVER_HPP_INCLUDED
 #define OSCPP_SERVER_HPP_INCLUDED
 
-#include <oscpp/stream.hpp>
+#include <oscpp/detail/stream.hpp>
 #include <oscpp/util.hpp>
 
 #include <algorithm>
