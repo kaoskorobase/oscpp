@@ -27,124 +27,124 @@
 
 #include <cassert>
 
-namespace OSC
+namespace OSCPP {
+
+static const size_t kAlignment = 4;
+
+inline bool isAligned(const void* ptr, size_t alignment)
 {
-    static const size_t kAlignment = 4;
+    return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
+}
 
-    inline bool isAligned(const void* ptr, size_t alignment)
-    {
-        return (reinterpret_cast<uintptr_t>(ptr) & (alignment-1)) == 0;
+constexpr bool isAligned(size_t n)
+{
+    return (n & 3) == 0;
+}
+
+constexpr size_t align(size_t n)
+{
+    return (n + 3) & -4;
+}
+
+constexpr size_t padding(size_t n)
+{
+    return align(n) - n;
+}
+
+inline void checkAlignment(const void* ptr, size_t n)
+{
+    if (!isAligned(ptr, n)) {
+        throw std::runtime_error("Unaligned pointer");
     }
+}
 
-    constexpr bool isAligned(size_t n)
+namespace Tags {
+
+    constexpr size_t int32()
     {
-        return (n & 3) == 0;
+        return 1;
     }
-
-    constexpr size_t align(size_t n)
+    constexpr size_t float32()
     {
-        return (n + 3) & -4;
+        return 1;
     }
-
-    constexpr size_t padding(size_t n)
+    constexpr size_t string()
     {
-        return align(n) - n;
+        return 1;
     }
-
-    inline void checkAlignment(const void* ptr, size_t n)
+    constexpr size_t blob()
     {
-        if (!isAligned(ptr, n)) {
-            throw std::runtime_error("Unaligned pointer");
-        }
+        return 1;
     }
-
-    namespace Tags
+    constexpr size_t array(size_t numElems)
     {
-        constexpr size_t int32()
+        return numElems+2;
+    }
+}
+
+namespace Size {
+
+    class String
+    {
+    public:
+        String(const char* x)
+            : m_value(x)
+        {}
+
+        operator const char* () const
         {
-            return 1;
+            return m_value;
         }
-        constexpr size_t float32()
-        {
-            return 1;
-        }
-        constexpr size_t string()
-        {
-            return 1;
-        }
-        constexpr size_t blob()
-        {
-            return 1;
-        }
-        constexpr size_t array(size_t numElems)
-        {
-            return numElems+2;
-        }
+
+    private:
+        const char* m_value;
     };
 
-    namespace Size
+    inline size_t string(const String& x)
     {
-        class String
-        {
-        public:
-            String(const char* x)
-                : m_value(x)
-            {}
-
-            operator const char* () const
-            {
-                return m_value;
-            }
-
-        private:
-            const char* m_value;
-        };
-
-        inline size_t string(const String& x)
-        {
-            return align(strlen(x)+1);
-        }
-
-        template <size_t N> constexpr size_t string(char const (&)[N])
-        {
-            return align(N);
-        }
-
-        constexpr size_t bundle(size_t numPackets)
-        {
-            return 8 /* #bundle */ + 8 /* timestamp */ + 4 * numPackets /* size prefix */;
-        }
-
-        inline size_t message(const String& address, size_t numArgs)
-        {
-            return string(address) + align(numArgs + 2);
-        }
-
-        template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
-        {
-            return string(address) + align(numArgs + 2);
-        }
-
-        constexpr size_t int32()
-        {
-            return 4;
-        }
-
-        constexpr size_t float32()
-        {
-            return 4;
-        }
-
-        constexpr size_t string(size_t n)
-        {
-            return align(n + 1);
-        }
-
-        constexpr size_t blob(size_t size)
-        {
-            return 4 + align(size);
-        }
+        return align(strlen(x)+1);
     }
+
+    template <size_t N> constexpr size_t string(char const (&)[N])
+    {
+        return align(N);
+    }
+
+    constexpr size_t bundle(size_t numPackets)
+    {
+        return 8 /* #bundle */ + 8 /* timestamp */ + 4 * numPackets /* size prefix */;
+    }
+
+    inline size_t message(const String& address, size_t numArgs)
+    {
+        return string(address) + align(numArgs + 2);
+    }
+
+    template <size_t N> constexpr size_t message(char const (&address)[N], size_t numArgs)
+    {
+        return string(address) + align(numArgs + 2);
+    }
+
+    constexpr size_t int32()
+    {
+        return 4;
+    }
+
+    constexpr size_t float32()
+    {
+        return 4;
+    }
+
+    constexpr size_t string(size_t n)
+    {
+        return align(n + 1);
+    }
+
+    constexpr size_t blob(size_t size)
+    {
+        return 4 + align(size);
+    }
+}
 }
 
 #endif // OSCPP_UTIL_HPP_INCLUDED

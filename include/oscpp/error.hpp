@@ -28,56 +28,57 @@
 #include <exception>
 #include <string>
 
-namespace OSC
+namespace OSCPP {
+
+class Error : public std::exception
 {
-    class Error : public std::exception
+public:
+    Error(const std::string& what)
+        : m_what(what)
+    { }
+
+    virtual ~Error() noexcept
+    { }
+
+    const char* what() const noexcept override
     {
-    public:
-        Error(const std::string& what)
-            : m_what(what)
-        { }
+        return m_what.c_str();
+    }
 
-        virtual ~Error() noexcept
-        { }
+private:
+    std::string m_what;
+};
 
-        const char* what() const noexcept override
-        {
-            return m_what.c_str();
-        }
+class UnderrunError : public Error
+{
+public:
+    UnderrunError()
+        : Error(std::string("Buffer underrun"))
+    { }
+};
 
-    private:
-        std::string m_what;
-    };
+class OverflowError : public Error
+{
+public:
+    OverflowError(size_t bytes)
+        : Error(std::string("Buffer overflow")),
+          m_bytes(bytes)
+    { }
 
-    class UnderrunError : public Error
-    {
-    public:
-        UnderrunError()
-            : Error(std::string("Buffer underrun"))
-        { }
-    };
+    size_t numBytes() const { return m_bytes; }
 
-    class OverflowError : public Error
-    {
-    public:
-        OverflowError(size_t bytes)
-            : Error(std::string("Buffer overflow")),
-              m_bytes(bytes)
-        { }
+private:
+    size_t m_bytes;
+};
 
-        size_t numBytes() const { return m_bytes; }
+class ParseError : public Error
+{
+public:
+    ParseError(const std::string& what="Parse error")
+        : Error(what)
+    { }
+};
 
-    private:
-        size_t m_bytes;
-    };
-
-    class ParseError : public Error
-    {
-    public:
-        ParseError(const std::string& what="Parse error")
-            : Error(what)
-        { }
-    };
 }
 
 #endif // OSCPP_ERROR_HPP_INCLUDED

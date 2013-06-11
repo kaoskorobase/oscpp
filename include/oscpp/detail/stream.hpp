@@ -35,7 +35,7 @@
 #include <cstdint>
 #include <cstring>
 
-namespace OSC {
+namespace OSCPP {
 
 class Stream
 {
@@ -128,7 +128,7 @@ public:
 
     inline void checkAlignment(size_t n) const
     {
-        OSC::checkAlignment(pos(), n);
+        OSCPP::checkAlignment(pos(), n);
     }
 
 protected:
@@ -215,7 +215,7 @@ public:
 
     void putData(const void* data, size_t size)
     {
-        const size_t padding = OSC::padding(size);
+        const size_t padding = OSCPP::padding(size);
         const size_t n = size + padding;
         checkWritable(n);
         std::memcpy(pos(),      data, size);

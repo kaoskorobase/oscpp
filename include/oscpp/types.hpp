@@ -25,26 +25,27 @@
 #ifndef OSCPP_TYPES_HPP_INCLUDED
 #define OSCPP_TYPES_HPP_INCLUDED
 
-namespace OSC
+namespace OSCPP {
+
+class Blob
 {
-    class Blob
-    {
-    public:
-        Blob()
-            : m_size(0), m_data(nullptr)
-        { }
-        Blob(const void* data, size_t size)
-            : m_size(size), m_data(data)
-        { }
-        Blob(const Blob& other) = default;
+public:
+    Blob()
+        : m_size(0), m_data(nullptr)
+    { }
+    Blob(const void* data, size_t size)
+        : m_size(size), m_data(data)
+    { }
+    Blob(const Blob& other) = default;
 
-        size_t size() const { return m_size; }
-        const void* data() const { return m_data; }
+    size_t size() const { return m_size; }
+    const void* data() const { return m_data; }
 
-    private:
-        size_t      m_size;
-        const void* m_data;
-    };
+private:
+    size_t      m_size;
+    const void* m_data;
+};
+
 }
 
 #endif // OSCPP_TYPES_HPP_INCLUDED

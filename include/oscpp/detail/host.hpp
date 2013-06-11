@@ -29,7 +29,7 @@
 #include <oscpp/detail/endian.hpp>
 #include <stdexcept>
 
-namespace OSC
+namespace OSCPP
 {
 #if defined(__GNUC__)
     inline static uint32_t bswap32(uint32_t x)
