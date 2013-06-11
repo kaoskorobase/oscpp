@@ -23,8 +23,21 @@ CXXFLAGS = \
 
 all: oscpp_autocheck
 
-oscpp_autocheck: $(HEADERS) oscpp_autocheck.cpp
+oscpp_autocheck: $(HEADERS) $(AUTOCHECK_HEADERS) oscpp_autocheck.cpp
 	$(CXX) -o $@ $(CXXFLAGS) oscpp_autocheck.cpp
 
+.PHONY: test
+test: oscpp_autocheck
+	./oscpp_autocheck
+
+README.cpp: ../README.md
+	runhaskell ../tools/mdcode.hs < $< > $@
+
+README: $(HEADERS) README.cpp
+	$(CXX) -o $@ $(CXXFLAGS) README.cpp
+
+.PHONY: clean
 clean:
-	rm -rf oscpp_autocheck oscpp_autocheck.dSYM
+	rm -f oscpp_autocheck
+	rm -f README.cpp README
+	rm -rf *.dSYM
