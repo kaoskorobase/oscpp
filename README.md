@@ -1,6 +1,6 @@
 **oscpp** is a header-only C++11 library for constructing and parsing
 [OpenSoundControl](http://opensoundcontrol.org) packets. Supported platforms
-are MacOS X, Linux and Windows. **oscpp** intends to be a minimal,
+are MacOS X (as well as iOS), Linux (including Android) and Windows; but the code should be easily portable to any platform with a C++11 compiler. **oscpp** intends to be a minimal,
 high-performance solution for working with OSC data. The library doesn't
 perform memory allocation (except when throwing exceptions) or other system
 calls and is suitable for use in realtime sensitive contexts such as audio
