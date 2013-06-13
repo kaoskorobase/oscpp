@@ -204,7 +204,24 @@ Unknown message: /n_free i:1
 /n_set 1 wobble 31
 ~~~~
 
+## How to run the example
+
+You can build and run the example by executing
+
+~~~~
+make README
+~~~~
+
+You'll need to install the [Haskell Platform](http://www.haskell.org/platform/)
+and the [Pandoc](http://johnmacfarlane.net/pandoc/) library:
+
+~~~~
+cabal install pandoc
+~~~~
+
 ## Appendix: Support code
+
+Here's the code for a trivial transport that has a single packet buffer:
 
 ~~~~cpp
 #include <cstring>
