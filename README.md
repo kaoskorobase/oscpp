@@ -17,8 +17,8 @@ the spec.
 ## Installation
 
 Since **oscpp** only consists of header files, the library doesn't need to be
-compiled or installed. Simply put the header file directory `include` into
-a location that is searched by your compiler and you're set.
+compiled or installed. Simply put the `include` directory into a location that
+is searched by your compiler and you're set.
 
 ## Usage
 
