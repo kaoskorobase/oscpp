@@ -1,10 +1,11 @@
 **oscpp** is a header-only C++11 library for constructing and parsing
 [OpenSoundControl](http://opensoundcontrol.org) packets. Supported platforms
-are MacOS X (as well as iOS), Linux (including Android) and Windows; but the code should be easily portable to any platform with a C++11 compiler. **oscpp** intends to be a minimal,
-high-performance solution for working with OSC data. The library doesn't
-perform memory allocation (except when throwing exceptions) or other system
-calls and is suitable for use in realtime sensitive contexts such as audio
-driver callbacks.
+are MacOS X, iOS, Linux, Android and Windows; the code should be easily
+portable to any platform with a C++11 compiler. **oscpp** intends to be a
+minimal, high-performance solution for working with OSC data. The library
+doesn't perform memory allocation (except when throwing exceptions) or other
+system calls and is suitable for use in realtime sensitive contexts such as
+audio driver callbacks.
 
 **oscpp** conforms to the [OpenSoundControl 1.0
 specification](http://opensoundcontrol.org/spec-1_0). Except for arrays,
@@ -21,14 +22,14 @@ a location that is searched by your compiler and you're set.
 
 ## Usage
 
-**oscpp** puts everything in the `OSCPP` namespace, with the two most important
-subnamespaces `Client` for constructing packets and `Server` for parsing
-packets.
+**oscpp** places everything in the `OSCPP` namespace, with the two most
+important subnamespaces `Client` for constructing packets and `Server` for
+parsing packets.
 
-First let's have a look at how to construct OSC packets: Assuming you have
-allocated a buffer before, you can construct a client packet on the stack and
+First let's have a look at how to build OSC packets in memory: Assuming you
+have allocated a buffer you can construct a client packet on the stack and
 start filling the buffer with data. When all the data has been written, the
-`size()` method returns the actual size in bytes of the resulting OSC packet.
+`size` method returns the actual size in bytes of the resulting OSC packet.
 
 ~~~~
 #include <oscpp/client.hpp>
