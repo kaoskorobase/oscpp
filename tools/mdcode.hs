@@ -1,7 +1,7 @@
 import Text.Pandoc
 
 extractCodeBlock :: Block -> [String]
-extractCodeBlock (CodeBlock (id, classes, namevals) contents) = [contents]
+extractCodeBlock (CodeBlock (id, classes, namevals) contents) | "cpp" `elem` classes = [contents]
 extractCodeBlock _ = []
 
 extractCode :: Pandoc -> [String]

@@ -31,7 +31,7 @@ have allocated a buffer you can construct a client packet on the stack and
 start filling the buffer with data. When all the data has been written, the
 `size` method returns the actual size in bytes of the resulting OSC packet.
 
-~~~~
+~~~~cpp
 #include <oscpp/client.hpp>
 
 size_t makePacket(void* buffer, size_t size)
@@ -70,7 +70,7 @@ size_t makePacket(void* buffer, size_t size)
 Now given some packet transport (e.g. a UDP socket, see below for a dummy
 implementation), a packet can be constructed and sent as follows:
 
-~~~~
+~~~~cpp
 class Transport;
 
 size_t send(Transport* t, const void* buffer, size_t size);
@@ -84,7 +84,7 @@ void sendPacket(Transport* t, void* buffer, size_t bufferSize)
 
 When parsing data from OSC packets you have to handle the two distinct cases of bundles and messages:
 
-~~~~
+~~~~cpp
 #include <oscpp/server.hpp>
 #include <oscpp/print.hpp>
 #include <iostream>
@@ -146,7 +146,7 @@ void handlePacket(const OSCPP::Server::Packet& packet)
 
 Now we can receive data from a message based transport and pass it to our packet handling function:
 
-~~~~
+~~~~cpp
 #include <array>
 
 const size_t kMaxPacketSize = 8192;
@@ -168,8 +168,8 @@ void recvPacket(Transport* t)
 ~~~~
 
 Now we can use our code in an example main function:
+~~~~cpp
 
-~~~~
 Transport* newTransport();
 
 int main(int, char**)
@@ -185,6 +185,7 @@ int main(int, char**)
 ## Appendix: Support code
 
 ~~~~
+~~~~cpp
 #include <cstring>
   
 class Transport
