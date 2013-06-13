@@ -41,13 +41,20 @@ size_t makePacket(void* buffer, size_t size)
     packet
         // Open a bundle with a timetag
         .openBundle(1234ULL)
-            // Add a message with four arguments
-            .openMessage("/s_new", 4)
+            // Add a message with two arguments and an array with 6 elements;
+            // for efficiency this needs to be known in advance.
+            .openMessage("/s_new", 2 + OSCPP::Tags::array(6))
                 // Write the arguments
                 .string("sinesweep")
                 .int32(2)
-                .string("freq")
-                .float32(330.3)
+                .openArray()
+                    .string("start-freq")
+                    .float32(330)
+                    .string("end-freq")
+                    .float32(990)
+                    .string("amp")
+                    .float32(0.4)
+                .closeArray()
             // Every `open` needs a corresponding `close`
             .closeMessage()
             // Add another message with one argument
@@ -67,8 +74,9 @@ size_t makePacket(void* buffer, size_t size)
 }
 ~~~~
 
-Now given some packet transport (e.g. a UDP socket, see below for a dummy
-implementation), a packet can be constructed and sent as follows:
+Now given a suitable packet transport (e.g. a UDP socket or an in-memory FIFO,
+see below for a dummy implementation), a packet can be constructed and sent as
+follows:
 
 ~~~~cpp
 class Transport;
@@ -77,7 +85,7 @@ size_t send(Transport* t, const void* buffer, size_t size);
 
 void sendPacket(Transport* t, void* buffer, size_t bufferSize)
 {
-    size_t packetSize = makePacket(buffer, bufferSize);
+    const size_t packetSize = makePacket(buffer, bufferSize);
     send(t, buffer, packetSize);
 }
 ~~~~
@@ -119,13 +127,17 @@ void handlePacket(const OSCPP::Server::Packet& packet)
         if (msg == "/s_new") {
             const char* name = args.string();
             const int32_t id = args.int32();
-            const char* param = args.string();
-            const float value = args.float32();
             std::cout << "/s_new" << " "
                       << name << " "
-                      << id << " "
-                      << param << " "
-                      << value << std::endl;
+                      << id << " ";
+            // Get the params array as an ArgStream
+            OSCPP::Server::ArgStream params(args.array());
+            while (!params.atEnd()) {
+                const char* param = params.string();
+                const float value = params.float32();
+                std::cout << param << ":" << value << " ";
+            }
+            std::cout << std::endl;
         } else if (msg == "/n_set") {
             const int32_t id = args.int32();
             const char* key = args.string();
@@ -144,7 +156,8 @@ void handlePacket(const OSCPP::Server::Packet& packet)
 }
 ~~~~
 
-Now we can receive data from a message based transport and pass it to our packet handling function:
+Now we can receive data from a message based transport and pass it to our
+packet handling function:
 
 ~~~~cpp
 #include <array>
@@ -156,19 +169,15 @@ size_t recv(Transport* t, void* buffer, size_t size);
 void recvPacket(Transport* t)
 {
     std::array<char,kMaxPacketSize> buffer;
-
     size_t size = recv(t, buffer.data(), buffer.size());
-
-    try {
-        handlePacket(OSCPP::Server::Packet(buffer.data(), size));
-    } catch (std::exception& e) {
-        std::cout << "Exception: " << e.what() << std::endl;
-    }
+    handlePacket(OSCPP::Server::Packet(buffer.data(), size));
 }
 ~~~~
 
-Now we can use our code in an example main function:
+Here's our code in an example main function:
+
 ~~~~cpp
+#include <stdexcept>
 
 Transport* newTransport();
 
@@ -176,15 +185,27 @@ int main(int, char**)
 {
     std::unique_ptr<Transport> t(newTransport());
     std::array<char,kMaxPacketSize> sendBuffer;
-    sendPacket(t.get(), sendBuffer.data(), sendBuffer.size());
-    recvPacket(t.get());
+    try {
+        sendPacket(t.get(), sendBuffer.data(), sendBuffer.size());
+        recvPacket(t.get());
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
     return 0;
 }
 ~~~~
 
-## Appendix: Support code
+Compiling and running the example produces the following output:
 
 ~~~~
+#bundle 1234
+/s_new sinesweep 2 start-freq:330 end-freq:990 amp:0.4
+Unknown message: /n_free i:1
+/n_set 1 wobble 31
+~~~~
+
+## Appendix: Support code
+
 ~~~~cpp
 #include <cstring>
   
