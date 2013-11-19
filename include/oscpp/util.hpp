@@ -125,14 +125,14 @@ namespace Size {
         return string(address) + align(numArgs + 2);
     }
 
-    constexpr size_t int32()
+    constexpr size_t int32(size_t n=1)
     {
-        return 4;
+        return n*4;
     }
 
-    constexpr size_t float32()
+    constexpr size_t float32(size_t n=1)
     {
-        return 4;
+        return n*4;
     }
 
     constexpr size_t string(size_t n)
