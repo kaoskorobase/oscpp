@@ -577,6 +577,24 @@ bool prop_identity(const std::shared_ptr<OSCPP::AST::Packet>& packet1)
     return true;
 }
 
+bool prop_overflow(const std::shared_ptr<OSCPP::AST::Packet>& packet, size_t inBufferSize)
+{
+    const size_t packetSize = packet->size();
+    const size_t bufferSize = inBufferSize == 0 ? 1 : (inBufferSize < packetSize ? inBufferSize : packetSize - 1);
+    std::cerr << "bufferSize " << bufferSize << std::endl;
+    std::unique_ptr<char[]> data(new char[bufferSize]);
+    OSCPP::Client::Packet clientPacket(data.get(), bufferSize);
+    bool result = false;
+    try {
+        packet->put(clientPacket);
+    } catch (OSCPP::OverflowError& e) {
+        result = true;
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    return result;
+}
+
 int main(int argc, char** argv)
 {
     using namespace OSCPP::AST;
@@ -586,5 +604,10 @@ int main(int argc, char** argv)
         150,
         ac::make_arbitrary(PacketGen())
     );
+    // ac::check<std::shared_ptr<Packet>,size_t>(
+    //     prop_overflow,
+    //     150,
+    //     ac::make_arbitrary(PacketGen(), ac::generator<size_t>())
+    // );
     return 0;
 }
