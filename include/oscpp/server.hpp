@@ -437,4 +437,14 @@ static inline bool operator==(const char* str, const OSCPP::Server::Message& msg
     return msg == str;
 }
 
+static inline bool operator!=(const OSCPP::Server::Message& msg, const char* str)
+{
+    return !(msg == str);
+}
+
+static inline bool operator!=(const char* str, const OSCPP::Server::Message& msg)
+{
+    return msg != str;
+}
+
 #endif // OSCPP_SERVER_HPP_INCLUDED

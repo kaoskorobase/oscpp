@@ -26,6 +26,7 @@
 #define OSCPP_UTIL_HPP_INCLUDED
 
 #include <cassert>
+#include <cstring>
 
 namespace OSCPP {
 
@@ -102,7 +103,7 @@ namespace Size {
 
     inline size_t string(const String& x)
     {
-        return align(strlen(x)+1);
+        return align(std::strlen(x)+1);
     }
 
     template <size_t N> constexpr size_t string(char const (&)[N])
@@ -125,14 +126,14 @@ namespace Size {
         return string(address) + align(numArgs + 2);
     }
 
-    constexpr size_t int32()
+    constexpr size_t int32(size_t n=1)
     {
-        return 4;
+        return n*4;
     }
 
-    constexpr size_t float32()
+    constexpr size_t float32(size_t n=1)
     {
-        return 4;
+        return n*4;
     }
 
     constexpr size_t string(size_t n)
