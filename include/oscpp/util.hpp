@@ -136,6 +136,11 @@ namespace Size {
         return n*4;
     }
 
+    constexpr size_t float64(size_t n=1)
+    {
+        return n*8;
+    }
+
     constexpr size_t string(size_t n)
     {
         return align(n + 1);

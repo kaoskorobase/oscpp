@@ -137,22 +137,22 @@ protected:
     char* m_pos;
 };
 
-class WriteStream: public Stream
+template <ByteOrder B> class BasicWriteStream: public Stream
 {
 public:
-    WriteStream()
+    BasicWriteStream()
         : Stream()
     { }
 
-    WriteStream(void* data, size_t size)
+    BasicWriteStream(void* data, size_t size)
         : Stream(data, size)
     { }
 
-    WriteStream(const WriteStream& stream)
+    BasicWriteStream(const BasicWriteStream& stream)
         : Stream(stream)
     { }
 
-    WriteStream(const WriteStream& stream, size_t size)
+    BasicWriteStream(const BasicWriteStream& stream, size_t size)
         : Stream(stream, size)
     { }
 
@@ -189,7 +189,7 @@ public:
         checkAlignment(4);
         uint32_t uh;
         memcpy(&uh, &x, 4);
-        const uint32_t un = convert32<NetworkByteOrder>(uh);
+        const uint32_t un = convert32<B>(uh);
         std::memcpy(pos(), &un, 4);
         advance(4);
     }
@@ -197,7 +197,7 @@ public:
     void putUInt64(uint64_t x)
     {
         checkWritable(8);
-        const uint64_t un = convert64<NetworkByteOrder>(x);
+        const uint64_t un = convert64<B>(x);
         std::memcpy(pos(), &un, 8);
         advance(8);
     }
@@ -208,9 +208,20 @@ public:
         checkAlignment(4);
         uint32_t uh;
         std::memcpy(&uh, &f, 4);
-        const uint32_t un = convert32<NetworkByteOrder>(uh);
+        const uint32_t un = convert32<B>(uh);
         std::memcpy(pos(), &un, 4);
         advance(4);
+    }
+
+    void putFloat64(double f)
+    {
+        checkWritable(8);
+        checkAlignment(4);
+        uint64_t uh;
+        std::memcpy(&uh, &f, 8);
+        const uint64_t un = convert64<B>(uh);
+        std::memcpy(pos(), &un, 8);
+        advance(8);
     }
 
     void putData(const void* data, size_t size)
@@ -229,22 +240,23 @@ public:
     }
 };
 
+typedef BasicWriteStream<NetworkByteOrder> WriteStream;
 
-class ReadStream : public Stream
+template <ByteOrder B> class BasicReadStream : public Stream
 {
 public:
-    ReadStream()
+    BasicReadStream()
     { }
 
-    ReadStream(const void* data, size_t size)
+    BasicReadStream(const void* data, size_t size)
         : Stream(const_cast<void*>(data), size)
     { }
 
-    ReadStream(const ReadStream& stream)
+    BasicReadStream(const BasicReadStream& stream)
         : Stream(stream)
     { }
 
-    ReadStream(const ReadStream& stream, size_t size)
+    BasicReadStream(const BasicReadStream& stream, size_t size)
         : Stream(stream, size)
     { }
 
@@ -283,7 +295,7 @@ public:
         checkAlignment(4);
         uint32_t un;
         std::memcpy(&un, pos(), 4);
-        const uint32_t uh = convert32<NetworkByteOrder>(un);
+        const uint32_t uh = convert32<B>(un);
         int32_t x;
         std::memcpy(&x, &uh, 4);
         return x;
@@ -304,7 +316,7 @@ public:
         uint64_t un;
         std::memcpy(&un, pos(), 8);
         advance(8);
-        return convert64<NetworkByteOrder>(un);
+        return convert64<B>(un);
     }
 
     // throw (UnderrunError)
@@ -315,9 +327,23 @@ public:
         uint32_t un;
         std::memcpy(&un, pos(), 4);
         advance(4);
-        const uint32_t uh = convert32<NetworkByteOrder>(un);
+        const uint32_t uh = convert32<B>(un);
         float f;
         std::memcpy(&f, &uh, 4);
+        return f;
+    }
+
+    // throw (UnderrunError)
+    inline double getFloat64()
+    {
+        checkReadable(8);
+        checkAlignment(4);
+        uint64_t un;
+        std::memcpy(&un, pos(), 8);
+        advance(8);
+        const uint64_t uh = convert64<B>(un);
+        double f;
+        std::memcpy(&f, &uh, 8);
         return f;
     }
 
@@ -341,6 +367,8 @@ public:
         return x;
     }
 };
+
+typedef BasicReadStream<NetworkByteOrder> ReadStream;
 }
 
 #endif // OSCPP_STREAM_HPP_INCLUDED
