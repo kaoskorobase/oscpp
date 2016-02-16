@@ -1,3 +1,14 @@
+addons:
+  apt:
+    sources:
+      - llvm-toolchain-precise
+      - ubuntu-toolchain-r-test
+    packages:
+      - clang-3.7
+      - g++-5
+      - gcc-5
 language: cpp
-compiler: clang
 script: make
+env:
+  - CXX=g++-5
+  - CXX=clang++-3.7
