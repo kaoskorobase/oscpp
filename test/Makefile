@@ -15,7 +15,7 @@ else
 endif
 
 CXXFLAGS = \
-	-std=c++11 -stdlib=libc++ \
+	-std=c++11 \
 	-Wall -Wextra -Wno-unused-parameter \
 	-I../include -Iautocheck/include \
 	$(CXXFLAGS_DEBUG) \
