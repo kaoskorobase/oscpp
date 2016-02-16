@@ -30,8 +30,9 @@ oscpp_autocheck: $(HEADERS) $(AUTOCHECK_HEADERS) oscpp_autocheck.cpp
 test: oscpp_autocheck
 	./oscpp_autocheck
 
-README.cpp: ../README.md
-	runhaskell ../tools/mdcode.hs < $< > $@
+README_SRC = ../README.md
+README.cpp: ../tools/mdcode.rb $(README_SRC)
+	ruby ../tools/mdcode.rb < $(README_SRC) > $@
 
 README: $(HEADERS) README.cpp
 	$(CXX) -o $@ $(CXXFLAGS) README.cpp
