@@ -177,6 +177,7 @@ void recvPacket(Transport* t)
 Here's our code in an example main function:
 
 ~~~~cpp
+#include <memory>
 #include <stdexcept>
 
 Transport* newTransport();
@@ -225,7 +226,7 @@ Here's the code for a trivial transport that has a single packet buffer:
 
 ~~~~cpp
 #include <cstring>
-  
+
 class Transport
 {
 public:

@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <tuple>
 
 namespace OSCPP {
 namespace Server {
@@ -38,14 +39,14 @@ namespace Server {
 //! OSC Message Argument Iterator.
 /*!
  * Retrieve typed arguments from an incoming message.
- * 
+ *
  * Supported tags and their correspondong types are:
  *
  *  i       -- 32 bit signed integer number<br>
  *  f       -- 32 bit floating point number<br>
  *  s       -- NULL-terminated string padded to 4-byte boundary<br>
  *  b       -- 32-bit integer size followed by 4-byte aligned data
- * 
+ *
  * \sa getArgInt32
  * \sa getArgFloat32
  * \sa getArgString
