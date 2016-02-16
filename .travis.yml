@@ -10,5 +10,7 @@ addons:
 language: cpp
 script: make
 env:
-  - CXX=g++-5
-  - CXX=clang++-3.7
+  - MY_CXX=g++-5
+  - MY_CXX=clang++-3.7
+install:
+  - export CXX="${MY_CXX}"
