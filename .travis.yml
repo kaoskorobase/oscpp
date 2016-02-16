@@ -1,3 +1,5 @@
+sudo: false
+language: cpp
 addons:
   apt:
     sources:
@@ -7,7 +9,6 @@ addons:
       - clang-3.7
       - g++-5
       - gcc-5
-language: cpp
 script: make
 env:
   - MY_CXX=g++-5
