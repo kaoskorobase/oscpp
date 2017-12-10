@@ -40,7 +40,7 @@ namespace OSCPP
     {
         return __builtin_bswap64(x);
     }
-#elif defined(_WINDOWS_)
+#elif defined(_WINDOWS_) || defined(_WIN32)
 #   include <stdlib.h>
     inline static uint32_t bswap32(uint32_t x)
     {
