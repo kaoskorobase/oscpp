@@ -3,15 +3,20 @@ language: cpp
 addons:
   apt:
     sources:
-      - llvm-toolchain-precise
-      - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise
+    - ubuntu-toolchain-r-test
     packages:
-      - clang-3.7
-      - g++-5
-      - gcc-5
-script: make
+    - clang-3.7
+    - g++-5
+    - gcc-5
+script:
+- mkdir -p build
+- cd build
+- cmake ..
+- cmake --build . --config Release
+- ctest --config Release
 env:
-  - MY_CXX=g++-5
-  - MY_CXX=clang++
+- MY_CXX=g++-5
+- MY_CXX=clang++
 install:
-  - export CXX="${MY_CXX}"
+- export CXX="${MY_CXX}"
