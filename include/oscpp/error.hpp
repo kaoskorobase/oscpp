@@ -34,11 +34,11 @@ class Error : public std::exception
 {
 public:
     Error(const std::string& what)
-        : m_what(what)
-    { }
+    : m_what(what)
+    {}
 
     virtual ~Error() noexcept
-    { }
+    {}
 
     const char* what() const noexcept override
     {
@@ -53,19 +53,22 @@ class UnderrunError : public Error
 {
 public:
     UnderrunError()
-        : Error(std::string("Buffer underrun"))
-    { }
+    : Error(std::string("Buffer underrun"))
+    {}
 };
 
 class OverflowError : public Error
 {
 public:
     OverflowError(size_t bytes)
-        : Error(std::string("Buffer overflow")),
-          m_bytes(bytes)
-    { }
+    : Error(std::string("Buffer overflow"))
+    , m_bytes(bytes)
+    {}
 
-    size_t numBytes() const { return m_bytes; }
+    size_t numBytes() const
+    {
+        return m_bytes;
+    }
 
 private:
     size_t m_bytes;
@@ -74,11 +77,11 @@ private:
 class ParseError : public Error
 {
 public:
-    ParseError(const std::string& what="Parse error")
-        : Error(what)
-    { }
+    ParseError(const std::string& what = "Parse error")
+    : Error(what)
+    {}
 };
 
-}
+} // namespace OSCPP
 
 #endif // OSCPP_ERROR_HPP_INCLUDED

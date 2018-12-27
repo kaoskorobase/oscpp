@@ -27,10 +27,10 @@
 
 #include <oscpp/client.hpp>
 #include <oscpp/server.hpp>
+
 #include <ostream>
 
-namespace OSCPP {
-namespace detail {
+namespace OSCPP { namespace detail {
 
 const size_t kDefaultIndentWidth = 4;
 
@@ -38,17 +38,23 @@ class Indent
 {
 public:
     Indent(size_t w)
-        : m_width(w)
-        , m_indent(0)
-    { }
+    : m_width(w)
+    , m_indent(0)
+    {}
     Indent(size_t w, size_t n)
-        : m_width(w)
-        , m_indent(n)
-    { }
+    : m_width(w)
+    , m_indent(n)
+    {}
     Indent(const Indent&) = default;
 
-    operator size_t () const { return m_indent; }
-    Indent inc() const { return Indent(m_width, m_indent+m_width); }
+    operator size_t() const
+    {
+        return m_indent;
+    }
+    Indent inc() const
+    {
+        return Indent(m_width, m_indent + m_width);
+    }
 
 private:
     size_t m_width;
@@ -58,15 +64,18 @@ private:
 inline std::ostream& operator<<(std::ostream& out, const Indent& indent)
 {
     size_t n = indent;
-    while (n-- > 0) out << ' ';
+    while (n-- > 0)
+        out << ' ';
     return out;
 }
 
 inline void printArgs(std::ostream& out, Server::ArgStream args)
 {
-    while (!args.atEnd()) {
+    while (!args.atEnd())
+    {
         const char t = args.tag();
-        switch (t) {
+        switch (t)
+        {
             case 'i':
                 out << "i:" << args.int32();
                 break;
@@ -93,22 +102,28 @@ inline void printArgs(std::ostream& out, Server::ArgStream args)
     }
 }
 
-inline void printMessage(std::ostream& out, const Server::Message& msg, const Indent& indent)
+inline void printMessage(std::ostream& out, const Server::Message& msg,
+                         const Indent& indent)
 {
     out << indent << msg.address() << ' ';
     printArgs(out, msg.args());
 }
 
-inline void printBundle(std::ostream& out, const Server::Bundle& bundle, const Indent& indent)
+inline void printBundle(std::ostream& out, const Server::Bundle& bundle,
+                        const Indent& indent)
 {
     out << indent << "# " << bundle.time() << " [" << std::endl;
     Indent nextIndent = indent.inc();
-    auto packets = bundle.packets();
-    while (!packets.atEnd()) {
+    auto   packets = bundle.packets();
+    while (!packets.atEnd())
+    {
         auto packet = packets.next();
-        if (packet.isMessage()) {
+        if (packet.isMessage())
+        {
             printMessage(out, packet, nextIndent);
-        } else {
+        }
+        else
+        {
             printBundle(out, packet, nextIndent);
         }
         out << std::endl;
@@ -116,51 +131,53 @@ inline void printBundle(std::ostream& out, const Server::Bundle& bundle, const I
     out << indent << "]";
 }
 
-inline void printPacket(std::ostream& out, const Server::Packet& packet, const Indent& indent)
+inline void printPacket(std::ostream& out, const Server::Packet& packet,
+                        const Indent& indent)
 {
-    if (packet.isMessage()) {
+    if (packet.isMessage())
+    {
         printMessage(out, packet, indent);
-    } else {
+    }
+    else
+    {
         printBundle(out, packet, indent);
     }
 }
 
-}
-}
+}} // namespace OSCPP::detail
 
-namespace OSCPP {
-namespace Server {
+namespace OSCPP { namespace Server {
 
 inline std::ostream& operator<<(std::ostream& out, const Packet& packet)
 {
-    detail::printPacket(out, packet, detail::Indent(detail::kDefaultIndentWidth));
+    detail::printPacket(out, packet,
+                        detail::Indent(detail::kDefaultIndentWidth));
     return out;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const Bundle& packet)
 {
-    detail::printBundle(out, packet, detail::Indent(detail::kDefaultIndentWidth));
+    detail::printBundle(out, packet,
+                        detail::Indent(detail::kDefaultIndentWidth));
     return out;
 }
 
 inline std::ostream& operator<<(std::ostream& out, const Message& packet)
 {
-    detail::printMessage(out, packet, detail::Indent(detail::kDefaultIndentWidth));
+    detail::printMessage(out, packet,
+                         detail::Indent(detail::kDefaultIndentWidth));
     return out;
 }
 
-}
-}
+}} // namespace OSCPP::Server
 
-namespace OSCPP {
-namespace Client {
+namespace OSCPP { namespace Client {
 
 inline std::ostream& operator<<(std::ostream& out, const Packet& packet)
 {
     return out << Server::Packet(packet.data(), packet.size());
 }
 
-}
-}
+}} // namespace OSCPP::Client
 
 #endif // OSCPP_PRINT_HPP_INCLUDED

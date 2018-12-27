@@ -25,8 +25,8 @@
 #ifndef OSCPP_STREAM_HPP_INCLUDED
 #define OSCPP_STREAM_HPP_INCLUDED
 
-#include <oscpp/error.hpp>
 #include <oscpp/detail/host.hpp>
+#include <oscpp/error.hpp>
 #include <oscpp/types.hpp>
 #include <oscpp/util.hpp>
 
@@ -48,8 +48,8 @@ public:
     Stream(void* data, size_t size)
     {
         m_begin = static_cast<char*>(data);
-        m_end   = m_begin + size;
-        m_pos   = m_begin;
+        m_end = m_begin + size;
+        m_pos = m_begin;
     }
 
     Stream(const Stream& stream)
@@ -62,7 +62,8 @@ public:
     {
         m_begin = m_pos = stream.m_pos;
         m_end = m_begin + size;
-        if (m_end > stream.m_end) throw UnderrunError();
+        if (m_end > stream.m_end)
+            throw UnderrunError();
     }
 
     void reset()
@@ -137,24 +138,24 @@ protected:
     char* m_pos;
 };
 
-template <ByteOrder B> class BasicWriteStream: public Stream
+template <ByteOrder B> class BasicWriteStream : public Stream
 {
 public:
     BasicWriteStream()
-        : Stream()
-    { }
+    : Stream()
+    {}
 
     BasicWriteStream(void* data, size_t size)
-        : Stream(data, size)
-    { }
+    : Stream(data, size)
+    {}
 
     BasicWriteStream(const BasicWriteStream& stream)
-        : Stream(stream)
-    { }
+    : Stream(stream)
+    {}
 
     BasicWriteStream(const BasicWriteStream& stream, size_t size)
-        : Stream(stream, size)
-    { }
+    : Stream(stream, size)
+    {}
 
     // throw (OverflowError)
     inline void checkWritable(size_t n) const
@@ -229,14 +230,14 @@ public:
         const size_t padding = OSCPP::padding(size);
         const size_t n = size + padding;
         checkWritable(n);
-        std::memcpy(pos(),      data, size);
-        std::memset(pos()+size, 0,    padding);
+        std::memcpy(pos(), data, size);
+        std::memset(pos() + size, 0, padding);
         advance(n);
     }
 
     void putString(const char* s)
     {
-        putData(s, strlen(s)+1);
+        putData(s, strlen(s) + 1);
     }
 };
 
@@ -246,24 +247,25 @@ template <ByteOrder B> class BasicReadStream : public Stream
 {
 public:
     BasicReadStream()
-    { }
+    {}
 
     BasicReadStream(const void* data, size_t size)
-        : Stream(const_cast<void*>(data), size)
-    { }
+    : Stream(const_cast<void*>(data), size)
+    {}
 
     BasicReadStream(const BasicReadStream& stream)
-        : Stream(stream)
-    { }
+    : Stream(stream)
+    {}
 
     BasicReadStream(const BasicReadStream& stream, size_t size)
-        : Stream(stream, size)
-    { }
+    : Stream(stream, size)
+    {}
 
     // throw (UnderrunError)
     void checkReadable(size_t n) const
     {
-        if (consumable() < n) throw UnderrunError();
+        if (consumable() < n)
+            throw UnderrunError();
     }
 
     // throw (UnderrunError)
@@ -296,7 +298,7 @@ public:
         uint32_t un;
         std::memcpy(&un, pos(), 4);
         const uint32_t uh = convert32<B>(un);
-        int32_t x;
+        int32_t        x;
         std::memcpy(&x, &uh, 4);
         return x;
     }
@@ -328,7 +330,7 @@ public:
         std::memcpy(&un, pos(), 4);
         advance(4);
         const uint32_t uh = convert32<B>(un);
-        float f;
+        float          f;
         std::memcpy(&f, &uh, 4);
         return f;
     }
@@ -342,7 +344,7 @@ public:
         std::memcpy(&un, pos(), 8);
         advance(8);
         const uint64_t uh = convert64<B>(un);
-        double f;
+        double         f;
         std::memcpy(&f, &uh, 8);
         return f;
     }
@@ -355,9 +357,12 @@ public:
         const char* ptr = static_cast<const char*>(pos()) + 3;
         const char* end = static_cast<const char*>(this->end());
 
-        while (true) {
-            if (ptr >= end) throw UnderrunError();
-            if (*ptr == '\0') break;
+        while (true)
+        {
+            if (ptr >= end)
+                throw UnderrunError();
+            if (*ptr == '\0')
+                break;
             ptr += 4;
         }
 
@@ -369,6 +374,6 @@ public:
 };
 
 typedef BasicReadStream<NetworkByteOrder> ReadStream;
-}
+} // namespace OSCPP
 
 #endif // OSCPP_STREAM_HPP_INCLUDED

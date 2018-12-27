@@ -16,7 +16,7 @@ endif
 
 CXXFLAGS = \
 	-std=c++11 \
-	-Wall -Wextra -Wno-unused-parameter \
+	-Wall -Wextra -Wno-unused-parameter -Werror \
 	-I../include -Iautocheck/include \
 	$(CXXFLAGS_DEBUG) \
 	$(CXXFLAGS_OPT)
