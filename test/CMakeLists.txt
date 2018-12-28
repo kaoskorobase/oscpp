@@ -20,9 +20,12 @@ target_include_directories(oscpp_autocheck PRIVATE
 
 add_test(oscpp_autocheck oscpp_autocheck)
 
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/README.cpp
-                   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/mdcode.rb ${CMAKE_CURRENT_SOURCE_DIR}/../README.md README.cpp
-                   MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/../README.md
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/README.cpp
+    COMMAND ruby ${CMAKE_CURRENT_SOURCE_DIR}/../tools/mdcode.rb
+                 ${CMAKE_CURRENT_SOURCE_DIR}/../README.md
+                 ${CMAKE_CURRENT_BINARY_DIR}/README.cpp
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/../README.md
 )
 
 # =============================================================================
