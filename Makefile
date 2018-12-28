@@ -1,4 +1,4 @@
-.PHONY: build clean distclean test verbose
+.PHONY: build clean distclean test v verbose
 
 NINJA_FLAGS = $(args)
 
@@ -8,6 +8,8 @@ endif
 
 build: build/CMakeCache.txt
 	cd build && ninja $(NINJA_FLAGS)
+
+v: verbose
 
 verbose: NINJA_FLAGS += -v
 verbose: build
