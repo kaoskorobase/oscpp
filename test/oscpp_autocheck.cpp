@@ -525,7 +525,7 @@ struct MessageArgGen
     result_type                            operator()(size_t size) const
     {
         AST::Argument::Type argType = static_cast<AST::Argument::Type>(
-            ac::generator<unsigned int>()(AST::Argument::kNumTypes - 1));
+            ac::generator<size_t>()(AST::Argument::kNumTypes - 1));
         switch (argType)
         {
             case AST::Argument::kInt32:
@@ -544,6 +544,8 @@ struct MessageArgGen
                 // Exponential size backoff
                 return std::make_shared<AST::Array>(
                     MessageArgListGen()(size / 2));
+            default:
+                throw std::logic_error("Invalid AST::Argument::Type value");
         }
         const bool InvalidArgumentType = false;
         assert(InvalidArgumentType);
