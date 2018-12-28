@@ -536,7 +536,7 @@ struct MessageArgGen
                     ac::generator<float>()(size));
             case AST::Argument::kString:
                 return std::make_shared<AST::String>(
-                    ac::string<ac::ccPrintable>()(std::max(1ul, size)));
+                    ac::string<ac::ccPrintable>()(std::max<size_t>(1, size)));
             case AST::Argument::kBlob:
                 return std::make_shared<AST::Blob>(
                     ac::generator<int32_t>()(size));
