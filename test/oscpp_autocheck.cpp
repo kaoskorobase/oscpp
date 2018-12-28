@@ -629,7 +629,7 @@ bool prop_overflow(const std::shared_ptr<OSCPP::AST::Packet>& packet,
     {
         packet->put(clientPacket);
     }
-    catch (OSCPP::OverflowError& e)
+    catch (OSCPP::OverflowError&)
     {
         result = true;
     }
