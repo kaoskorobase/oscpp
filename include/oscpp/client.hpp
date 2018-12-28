@@ -263,8 +263,10 @@ public:
     Packet& blob(const Blob& arg)
     {
         if (arg.size() > (size_t)std::numeric_limits<int32_t>::max())
+        {
             throw std::invalid_argument("Blob size greater than maximum "
                                         "value representable by int32_t");
+        }
         m_tags.putChar('b');
         m_args.putInt32(static_cast<int32_t>(arg.size()));
         m_args.putData(arg.data(), arg.size());
