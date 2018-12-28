@@ -15,11 +15,10 @@ install:
 
 before_build:
   - ruby -v
-  - cmake -G "Visual Studio 15 2017 Win64" .
+  - sh: mkdir build && cd build && cmake -G "Visual Studio 15 2017 Win64" ..
 
-build:
-  project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
+build_script:
+  - sh: cd "${APPVEYOR_BUILD_FOLDER}/build" && cmake --build . --config Debug 
 
 test_script:
-  - cd %APPVEYOR_BUILD_FOLDER%
-  - ctest --config %CONFIGURATION% --output-on-failure
+  - sh: cd "${APPVEYOR_BUILD_FOLDER}/build" && ctest --config $CONFIGURATION --output-on-failure
