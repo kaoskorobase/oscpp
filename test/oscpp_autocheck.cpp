@@ -364,7 +364,7 @@ public:
     }
 
     Blob(OSCPP::Blob b)
-    : Blob(b.size(), b.data())
+    : Blob(static_cast<int32_t>(b.size()), b.data())
     {}
 
     ~Blob()
