@@ -1,4 +1,5 @@
-[![Build Status](https://img.shields.io/travis/kaoskorobase/oscpp.svg?style=flat&branch=develop)](https://travis-ci.org/kaoskorobase/oscpp)
+[![Build Status](https://img.shields.io/travis/kaoskorobase/oscpp.svg?style=flat)](https://travis-ci.org/kaoskorobase/oscpp)
+[![Build status](https://ci.appveyor.com/api/projects/status/b7qk7t9mmgnc1n1v?svg=true)](https://ci.appveyor.com/project/kaoskorobase/oscpp)
 
 **oscpp** is a header-only C++11 library for constructing and parsing
 [OpenSoundControl](http://opensoundcontrol.org) packets. Supported platforms
