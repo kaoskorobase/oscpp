@@ -45,8 +45,18 @@ class Packet
 {
     int32_t calcSize(const char* begin, const char* end)
     {
-        // TODO: Make sure pointer difference fits into int32_t
-        return end - begin - 4;
+        // Make sure pointer difference fits into int32_t
+        const intptr_t diff = end - begin - 4;
+        if (diff < 0)
+        {
+            throw std::logic_error("Calculated size is negative");
+        }
+        if (diff > std::numeric_limits<int32_t>::max())
+        {
+            throw std::logic_error(
+                "Calculated size can't be represented by int32_t");
+        }
+        return static_cast<int32_t>(diff);
     }
 
 public:
