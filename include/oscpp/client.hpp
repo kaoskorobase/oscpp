@@ -31,6 +31,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 
@@ -43,25 +44,24 @@ namespace OSCPP { namespace Client {
  */
 class Packet
 {
-    int32_t ptrDiff(const char* begin, const char* end)
+    int32_t ptrDiff(const char* a, const char* b)
     {
         // Make sure pointer difference fits into int32_t
-        const intptr_t diff = end - begin;
-        if (diff < 0)
+        const intptr_t diff = a - b;
+        if (diff < std::numeric_limits<int32_t>::min() ||
+            diff > std::numeric_limits<int32_t>::max())
         {
-            throw std::logic_error("Pointer difference is negative");
-        }
-        else if (diff > std::numeric_limits<int32_t>::max())
-        {
-            throw std::logic_error(
-                "Pointer difference can't be represented by int32_t");
+            std::stringstream s;
+            s << "Pointer difference " << diff
+              << " can't be represented by int32_t";
+            throw std::logic_error(s.str());
         }
         return static_cast<int32_t>(diff);
     }
 
     int32_t calcSize(const char* begin, const char* end)
     {
-        const int32_t size = ptrDiff(begin, end) - 4;
+        const int32_t size = ptrDiff(end, begin) - 4;
         if (size < 0)
         {
             throw std::logic_error("Calculated size is negative");
@@ -134,9 +134,11 @@ public:
     {
         if (m_inBundle > 0)
         {
+            assert(m_sizePosB != nullptr || m_inBundle == 1);
             // Remember previous size pos offset
-            const int32_t offset = ptrDiff(m_args.begin(), m_sizePosB);
-            char*         curPos = m_args.pos();
+            const int32_t offset =
+                m_sizePosB == nullptr ? 0 : ptrDiff(m_sizePosB, m_args.begin());
+            char* curPos = m_args.pos();
             m_args.skip(4);
             // Record size pos
             std::memcpy(curPos, &offset, 4);
