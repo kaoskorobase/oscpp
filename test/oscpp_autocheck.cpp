@@ -12,6 +12,8 @@ namespace OSCPP { namespace AST {
 class Value
 {
 public:
+    virtual ~Value()
+    {}
     virtual void print(std::ostream& out) const = 0;
     virtual void put(OSCPP::Client::Packet& packet) const = 0;
 };
