@@ -2,7 +2,10 @@
 #include <oscpp/print.hpp>
 #include <oscpp/server.hpp>
 
-#include <autocheck/autocheck.hpp>
+#include <catch2/catch_all.hpp>
+#include <rapidcheck.h>
+#include <rapidcheck/catch.h>
+
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -511,147 +514,152 @@ std::ostream& operator<<(std::ostream&                  out,
 }
 }} // namespace OSCPP::AST
 
-namespace ac = autocheck;
-
-namespace OSCPP { namespace AutoCheck {
-
-struct MessageArgListGen
-{
-    typedef AST::List<AST::Argument> result_type;
-    result_type                      operator()(size_t size) const;
-};
-
-struct MessageArgGen
-{
-    typedef std::shared_ptr<AST::Argument> result_type;
-    result_type                            operator()(size_t size) const
-    {
-        AST::Argument::Type argType = static_cast<AST::Argument::Type>(
-            ac::generator<size_t>()(AST::Argument::kNumTypes - 1));
-        switch (argType)
-        {
-            case AST::Argument::kInt32:
-                return std::make_shared<AST::Int32>(
-                    ac::generator<int32_t>()(size));
-            case AST::Argument::kFloat32:
-                return std::make_shared<AST::Float32>(
-                    ac::generator<float>()(size));
-            case AST::Argument::kString:
-                return std::make_shared<AST::String>(
-                    ac::string<ac::ccPrintable>()(std::max<size_t>(1, size)));
-            case AST::Argument::kBlob:
-                return std::make_shared<AST::Blob>(
-                    ac::generator<int32_t>()(size));
-            case AST::Argument::kArray:
-                // Exponential size backoff
-                return std::make_shared<AST::Array>(
-                    MessageArgListGen()(size / 2));
-            default:
-                throw std::logic_error("Invalid AST::Argument::Type value");
-        }
-        const bool InvalidArgumentType = false;
-        assert(InvalidArgumentType);
-    }
-};
-
-MessageArgListGen::result_type MessageArgListGen::operator()(size_t size) const
-{
-    const auto& elems = ac::list_of(MessageArgGen())(size);
-    return AST::List<AST::Argument>(elems.begin(), elems.end());
+// Forward declaration for mutual recursion between genArgList and Arbitrary<Argument>
+namespace {
+    rc::Gen<OSCPP::AST::List<OSCPP::AST::Argument>> genArgList();
 }
 
-struct PacketGen
-{
-    // ac::generator<std::shared_ptr<oscpp::AST::Packet>> source;
-    typedef std::shared_ptr<AST::Packet> result_type;
-    result_type                          operator()(size_t size) const
-    {
-        return ac::generator<bool>()(size) ? gen_bundle(size)
-                                           : gen_message(size);
-    }
+namespace rc {
 
-    result_type gen_bundle(size_t size) const
+template <>
+struct Arbitrary<std::shared_ptr<OSCPP::AST::Argument>> {
+    static Gen<std::shared_ptr<OSCPP::AST::Argument>> arbitrary()
     {
-        const auto& packets = ac::list_of(PacketGen())(size / 2);
-        return std::make_shared<AST::Bundle>(
-            ac::generator<uint64_t>()(size),
-            AST::List<AST::Packet>(packets.begin(), packets.end()));
-    }
-
-    std::string gen_message_address(size_t size) const
-    {
-        std::string result(
-            ac::string<ac::ccAlphaNumeric>()(std::max<size_t>(2, size)));
-        if (result[0] != '/')
-            result[0] = '/';
-        return result;
-    }
-
-    result_type gen_message(size_t size) const
-    {
-        return std::make_shared<AST::Message>(gen_message_address(size),
-                                              MessageArgListGen()(size));
+        using A = OSCPP::AST::Argument;
+        return gen::lazy([] {
+            return gen::mapcat(
+                gen::inRange(0, static_cast<int>(A::kNumTypes)),
+                [](int t) -> Gen<std::shared_ptr<A>> {
+                    switch (static_cast<A::Type>(t)) {
+                        case A::kInt32:
+                            return gen::map(gen::arbitrary<int32_t>(),
+                                [](int32_t v) -> std::shared_ptr<A> {
+                                    return std::make_shared<OSCPP::AST::Int32>(v); });
+                        case A::kFloat32:
+                            return gen::map(gen::arbitrary<float>(),
+                                [](float v) -> std::shared_ptr<A> {
+                                    return std::make_shared<OSCPP::AST::Float32>(v); });
+                        case A::kString:
+                            return gen::map(
+                                gen::container<std::string>(gen::inRange<char>(33, 127)),
+                                [](std::string s) -> std::shared_ptr<A> {
+                                    return std::make_shared<OSCPP::AST::String>(s); });
+                        case A::kBlob:
+                            return gen::map(gen::inRange<int32_t>(0, 64),
+                                [](int32_t sz) -> std::shared_ptr<A> {
+                                    return std::make_shared<OSCPP::AST::Blob>(sz); });
+                        case A::kArray:
+                            return gen::map(gen::scale(0.5, genArgList()),
+                                [](OSCPP::AST::List<OSCPP::AST::Argument> elems) -> std::shared_ptr<A> {
+                                    return std::make_shared<OSCPP::AST::Array>(std::move(elems)); });
+                        default:
+                            return gen::just(std::shared_ptr<A>(
+                                std::make_shared<OSCPP::AST::Int32>(0)));
+                    }
+                });
+        });
     }
 };
-}} // namespace OSCPP::AutoCheck
 
-bool prop_identity(const std::shared_ptr<OSCPP::AST::Packet>& packet1)
-{
-    // packet1->print(std::cerr); std::cerr << "\n";
-    const size_t            size = packet1->size();
-    std::unique_ptr<char[]> data(new char[size]);
-    OSCPP::Client::Packet   clientPacket(data.get(), size);
-    packet1->put(clientPacket);
-    OSCPP::Server::Packet serverPacket(clientPacket.data(),
-                                       clientPacket.size());
-    auto                  packet2 = OSCPP::AST::Packet::parse(serverPacket);
-    using namespace OSCPP::AST;
-    if (!(*packet1 == *packet2))
+template <>
+struct Arbitrary<std::shared_ptr<OSCPP::AST::Packet>> {
+    static Gen<std::shared_ptr<OSCPP::AST::Packet>> arbitrary()
     {
-        std::cerr << packet1 << std::endl;
-        std::cerr << packet2 << std::endl;
-        return false;
+        using P = OSCPP::AST::Packet;
+        return gen::lazy([] {
+            return gen::mapcat(
+                gen::arbitrary<bool>(),
+                [](bool isBundle) -> Gen<std::shared_ptr<P>> {
+                    if (isBundle) {
+                        return gen::map(
+                            gen::tuple(
+                                gen::arbitrary<uint64_t>(),
+                                gen::scale(0.5,
+                                    gen::container<std::vector<std::shared_ptr<P>>>(
+                                        gen::arbitrary<std::shared_ptr<P>>()))),
+                            [](std::tuple<uint64_t, std::vector<std::shared_ptr<P>>> t)
+                                    -> std::shared_ptr<P> {
+                                uint64_t time = std::get<0>(t);
+                                auto& pkts = std::get<1>(t);
+                                OSCPP::AST::List<P> list(pkts.begin(), pkts.end());
+                                return std::make_shared<OSCPP::AST::Bundle>(time, list);
+                            });
+                    } else {
+                        auto addrGen = gen::map(
+                            gen::container<std::string>(gen::inRange<char>('a', '{')),
+                            [](std::string s) -> std::string { return "/" + s; });
+                        return gen::map(
+                            gen::tuple(addrGen, genArgList()),
+                            [](std::tuple<std::string,
+                                         OSCPP::AST::List<OSCPP::AST::Argument>> t)
+                                    -> std::shared_ptr<P> {
+                                std::string addr = std::get<0>(t);
+                                OSCPP::AST::List<OSCPP::AST::Argument> args =
+                                    std::get<1>(t);
+                                return std::make_shared<OSCPP::AST::Message>(addr, args);
+                            });
+                    }
+                });
+        });
     }
-    return true;
+};
+
+} // namespace rc
+
+namespace {
+    rc::Gen<OSCPP::AST::List<OSCPP::AST::Argument>> genArgList()
+    {
+        using A = OSCPP::AST::Argument;
+        return rc::gen::map(
+            rc::gen::container<std::vector<std::shared_ptr<A>>>(
+                rc::gen::arbitrary<std::shared_ptr<A>>()),
+            [](std::vector<std::shared_ptr<A>> v) {
+                return OSCPP::AST::List<A>(v.begin(), v.end());
+            });
+    }
 }
 
-bool prop_overflow(const std::shared_ptr<OSCPP::AST::Packet>& packet,
-                   size_t                                     inBufferSize)
+TEST_CASE("prop_identity")
 {
-    const size_t packetSize = packet->size();
-    const size_t bufferSize =
-        inBufferSize == 0
-            ? 1
-            : (inBufferSize < packetSize ? inBufferSize : packetSize - 1);
-    std::cerr << "bufferSize " << bufferSize << std::endl;
-    std::unique_ptr<char[]> data(new char[bufferSize]);
-    OSCPP::Client::Packet   clientPacket(data.get(), bufferSize);
-    bool                    result = false;
-    try
-    {
-        packet->put(clientPacket);
-    }
-    catch (OSCPP::OverflowError&)
-    {
-        result = true;
-    }
-    catch (std::exception& e)
-    {
-        std::cerr << "Exception: " << e.what() << std::endl;
-    }
-    return result;
+    rc::prop("identity round-trips encode/decode",
+        [](std::shared_ptr<OSCPP::AST::Packet> p) {
+            const size_t            size = p->size();
+            std::unique_ptr<char[]> data(new char[size]);
+            OSCPP::Client::Packet   clientPacket(data.get(), size);
+            p->put(clientPacket);
+            OSCPP::Server::Packet serverPacket(clientPacket.data(),
+                                               clientPacket.size());
+            auto p2 = OSCPP::AST::Packet::parse(serverPacket);
+            RC_ASSERT(*p == *p2);
+        });
 }
 
-int main(int argc, char** argv)
+TEST_CASE("prop_overflow")
 {
-    using namespace OSCPP::AST;
-    using namespace OSCPP::AutoCheck;
-    ac::check<std::shared_ptr<Packet>>(prop_identity, 150,
-                                       ac::make_arbitrary(PacketGen()));
-    // ac::check<std::shared_ptr<Packet>,size_t>(
-    //     prop_overflow,
-    //     150,
-    //     ac::make_arbitrary(PacketGen(), ac::generator<size_t>())
-    // );
-    return 0;
+    rc::prop("overflow throws OverflowError for undersized buffer",
+        [](std::shared_ptr<OSCPP::AST::Packet> packet, size_t inBufferSize) {
+            const size_t packetSize = packet->size();
+            const size_t bufferSize =
+                inBufferSize == 0
+                    ? 1
+                    : (inBufferSize < packetSize ? inBufferSize : packetSize - 1);
+            std::unique_ptr<char[]> data(new char[bufferSize]);
+            OSCPP::Client::Packet   clientPacket(data.get(), bufferSize);
+            bool                    threw = false;
+            try
+            {
+                packet->put(clientPacket);
+            }
+            catch (OSCPP::OverflowError&)
+            {
+                threw = true;
+            }
+            catch (OSCPP::UnderrunError&)
+            {
+                // openMessage throws UnderrunError when the tag sub-stream
+                // would exceed the buffer bounds
+                threw = true;
+            }
+            RC_ASSERT(threw);
+        });
 }
