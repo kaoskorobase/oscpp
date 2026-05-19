@@ -22,7 +22,7 @@ add_test(oscpp_autocheck oscpp_autocheck)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/README.cpp
-    COMMAND ruby ${CMAKE_CURRENT_SOURCE_DIR}/../tools/mdcode.rb
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/../tools/mdcode.py
                  ${CMAKE_CURRENT_SOURCE_DIR}/../README.md
                  ${CMAKE_CURRENT_BINARY_DIR}/README.cpp
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/../README.md

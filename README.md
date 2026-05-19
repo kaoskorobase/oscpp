@@ -34,7 +34,7 @@ have allocated a buffer you can construct a client packet on the stack and
 start filling the buffer with data. When all the data has been written, the
 `size` method returns the actual size in bytes of the resulting OSC packet.
 
-~~~~cpp
+```cpp
 #include <oscpp/client.hpp>
 
 size_t makePacket(void* buffer, size_t size)
@@ -75,13 +75,13 @@ size_t makePacket(void* buffer, size_t size)
         .closeBundle();
     return packet.size();
 }
-~~~~
+```
 
 Now given a suitable packet transport (e.g. a UDP socket or an in-memory FIFO,
 see below for a dummy implementation), a packet can be constructed and sent as
 follows:
 
-~~~~cpp
+```cpp
 class Transport;
 
 size_t send(Transport* t, const void* buffer, size_t size);
@@ -91,11 +91,11 @@ void sendPacket(Transport* t, void* buffer, size_t bufferSize)
     const size_t packetSize = makePacket(buffer, bufferSize);
     send(t, buffer, packetSize);
 }
-~~~~
+```
 
 When parsing data from OSC packets you have to handle the two distinct cases of bundles and messages:
 
-~~~~cpp
+```cpp
 #include <oscpp/server.hpp>
 #include <oscpp/print.hpp>
 #include <iostream>
@@ -157,12 +157,12 @@ void handlePacket(const OSCPP::Server::Packet& packet)
         }
     }
 }
-~~~~
+```
 
 Now we can receive data from a message based transport and pass it to our
 packet handling function:
 
-~~~~cpp
+```cpp
 #include <array>
 
 const size_t kMaxPacketSize = 8192;
@@ -175,11 +175,11 @@ void recvPacket(Transport* t)
     size_t size = recv(t, buffer.data(), buffer.size());
     handlePacket(OSCPP::Server::Packet(buffer.data(), size));
 }
-~~~~
+```
 
 Here's our code in an example main function:
 
-~~~~cpp
+```cpp
 #include <memory>
 #include <stdexcept>
 
@@ -197,37 +197,37 @@ int main(int, char**)
     }
     return 0;
 }
-~~~~
+```
 
 Compiling and running the example produces the following output:
 
-~~~~
+```
 #bundle 1234
 /s_new sinesweep 2 start-freq:330 end-freq:990 amp:0.4
 Unknown message: /n_free i:1
 /n_set 1 wobble 31
-~~~~
+```
 
 ## How to run the example
 
 You can build and run the example by executing
 
-~~~~
+```
 make README
-~~~~
+```
 
 You'll need to install the [Haskell Platform](http://www.haskell.org/platform/)
 and the [Pandoc](http://johnmacfarlane.net/pandoc/) library:
 
-~~~~
+```
 cabal install pandoc
-~~~~
+```
 
 ## Appendix: Support code
 
 Here's the code for a trivial transport that has a single packet buffer:
 
-~~~~cpp
+```cpp
 #include <cstring>
 
 class Transport
@@ -271,4 +271,4 @@ size_t recv(Transport* t, void* buffer, size_t size)
 {
     return t->recv(buffer, size);
 }
-~~~~
+```
