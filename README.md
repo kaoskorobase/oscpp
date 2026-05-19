@@ -1,6 +1,3 @@
-[![Build Status](https://img.shields.io/travis/kaoskorobase/oscpp.svg?style=flat)](https://travis-ci.org/kaoskorobase/oscpp)
-[![Build status](https://ci.appveyor.com/api/projects/status/b7qk7t9mmgnc1n1v?svg=true)](https://ci.appveyor.com/project/kaoskorobase/oscpp)
-
 **oscpp** is a header-only C++11 library for constructing and parsing
 [OpenSoundControl](http://opensoundcontrol.org) packets. Supported platforms
 are MacOS X, iOS, Linux, Android and Windows; the code should be easily
@@ -17,11 +14,34 @@ direct support for message address patterns or bundle scheduling; it is up to
 the user of the library to implement (a subset of) the semantics according to
 the spec.
 
-## Installation
+## Integration
 
-Since **oscpp** only consists of header files, the library doesn't need to be
-compiled or installed. Simply put the `include` directory into a location that
-is searched by your compiler and you're set.
+**oscpp** is header-only. There are two ways to use it:
+
+**Via CMake FetchContent** (recommended):
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(oscpp
+    GIT_REPOSITORY https://github.com/kaoskorobase/oscpp.git
+    GIT_TAG        1.0.0
+)
+FetchContent_MakeAvailable(oscpp)
+
+target_link_libraries(myapp PRIVATE oscpp::oscpp)
+```
+
+**Include directory only** — put the `include` directory into a location that
+is searched by your compiler and you're set. No compilation or installation
+required.
+
+## Building and Testing
+
+```shell
+cmake --preset debug                               # or: --preset release
+cmake --build build/debug                          # or: build/release
+ctest --test-dir build/debug --output-on-failure   # or: build/release
+```
 
 ## Usage
 
@@ -206,21 +226,6 @@ Compiling and running the example produces the following output:
 /s_new sinesweep 2 start-freq:330 end-freq:990 amp:0.4
 Unknown message: /n_free i:1
 /n_set 1 wobble 31
-```
-
-## How to run the example
-
-You can build and run the example by executing
-
-```
-make README
-```
-
-You'll need to install the [Haskell Platform](http://www.haskell.org/platform/)
-and the [Pandoc](http://johnmacfarlane.net/pandoc/) library:
-
-```
-cabal install pandoc
 ```
 
 ## Appendix: Support code

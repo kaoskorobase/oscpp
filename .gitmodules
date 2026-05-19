@@ -1,3 +1,0 @@
-[submodule "test/autocheck"]
-	path = test/autocheck
-	url = https://github.com/thejohnfreeman/autocheck
