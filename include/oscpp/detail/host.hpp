@@ -30,8 +30,12 @@
 #include <cstdint>
 #include <stdexcept>
 
+#if defined(_MSC_VER)
+#    include <stdlib.h>
+#endif
+
 namespace OSCPP {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 inline static uint32_t bswap32(uint32_t x)
 {
     return __builtin_bswap32(x);
@@ -40,8 +44,7 @@ inline static uint64_t bswap64(uint64_t x)
 {
     return __builtin_bswap64(x);
 }
-#elif defined(_WINDOWS_) || defined(_WIN32)
-#    include <stdlib.h>
+#elif defined(_MSC_VER)
 inline static uint32_t bswap32(uint32_t x)
 {
     return _byteswap_ulong(x);
@@ -51,7 +54,6 @@ inline static uint64_t bswap64(uint64_t x)
     return _byteswap_uint64(x);
 }
 #else
-// Fallback implementation
 #    warning Using unoptimized byte swap functions
 
 inline static uint32_t bswap32(uint32_t x)
@@ -62,10 +64,10 @@ inline static uint32_t bswap32(uint32_t x)
     const uint32_t b4 = x >> 24;
     return b1 | b2 | b3 | b4;
 }
-inline static uint64_t bswap64(int64_t x)
+inline static uint64_t bswap64(uint64_t x)
 {
-    const uint64_t w1 = oscpp_bswap(uint32_t(x & 0x00000000FFFFFFFF)) << 32;
-    const uint64_t w2 = oscpp_bswap(uint32_t(x >> 32));
+    const uint64_t w1 = uint64_t(bswap32(uint32_t(x & 0x00000000FFFFFFFF))) << 32;
+    const uint64_t w2 = bswap32(uint32_t(x >> 32));
     return w1 | w2;
 }
 #endif
