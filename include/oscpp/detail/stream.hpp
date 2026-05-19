@@ -58,6 +58,19 @@ public:
         m_end = stream.m_end;
     }
 
+    Stream& operator=(Stream other)
+    {
+        swap(other);
+        return *this;
+    }
+
+    void swap(Stream& other)
+    {
+        std::swap(m_begin, other.m_begin);
+        std::swap(m_end, other.m_end);
+        std::swap(m_pos, other.m_pos);
+    }
+
     Stream(const Stream& stream, size_t size)
     {
         m_begin = m_pos = stream.m_pos;
@@ -152,6 +165,12 @@ public:
     BasicWriteStream(const BasicWriteStream& stream)
     : Stream(stream)
     {}
+
+    BasicWriteStream& operator=(BasicWriteStream other)
+    {
+        Stream::swap(other);
+        return *this;
+    }
 
     BasicWriteStream(const BasicWriteStream& stream, size_t size)
     : Stream(stream, size)
@@ -256,6 +275,12 @@ public:
     BasicReadStream(const BasicReadStream& stream)
     : Stream(stream)
     {}
+
+    BasicReadStream& operator=(BasicReadStream other)
+    {
+        Stream::swap(other);
+        return *this;
+    }
 
     BasicReadStream(const BasicReadStream& stream, size_t size)
     : Stream(stream, size)
