@@ -1,20 +1,16 @@
 [![CI](https://github.com/kaoskorobase/oscpp/actions/workflows/ci.yml/badge.svg)](https://github.com/kaoskorobase/oscpp/actions/workflows/ci.yml)
 
 **oscpp** is a header-only C++11 library for constructing and parsing
-[OpenSoundControl](http://opensoundcontrol.org) packets. Supported platforms
-are MacOS X, iOS, Linux, Android and Windows; the code should be easily
-portable to any platform with a C++11 compiler. **oscpp** intends to be a
-minimal, high-performance solution for working with OSC data. The library
-doesn't perform memory allocation (except when throwing exceptions) or other
-system calls and is suitable for use in realtime sensitive contexts such as
-audio driver callbacks.
+[OpenSoundControl](http://opensoundcontrol.org) packets. It targets macOS,
+iOS, Linux, Android and Windows, and is portable to any C++11 platform.
+**oscpp** is a minimal, high-performance solution for working with OSC data:
+it performs no memory allocation (except when throwing exceptions) and is
+suitable for realtime-sensitive contexts such as audio driver callbacks.
 
 **oscpp** conforms to the [OpenSoundControl 1.0
-specification](http://opensoundcontrol.org/spec-1_0). Except for arrays,
-non-standard message argument types are currently not supported and there is no
-direct support for message address patterns or bundle scheduling; it is up to
-the user of the library to implement (a subset of) the semantics according to
-the spec.
+specification](http://opensoundcontrol.org/spec-1_0). Non-standard argument
+types (except arrays) are not supported. Message address pattern matching and
+bundle scheduling are left to the caller.
 
 ## Integration
 
@@ -51,10 +47,9 @@ ctest --test-dir build/debug --output-on-failure   # or: build/release
 important subnamespaces `Client` for constructing packets and `Server` for
 parsing packets.
 
-First let's have a look at how to build OSC packets in memory: Assuming you
-have allocated a buffer you can construct a client packet on the stack and
-start filling the buffer with data. When all the data has been written, the
-`size` method returns the actual size in bytes of the resulting OSC packet.
+To build an OSC packet, construct a `Client::Packet` over a buffer and chain
+method calls to write the data. The `size` method returns the final packet
+size in bytes.
 
 ```cpp
 #include <oscpp/client.hpp>
@@ -99,9 +94,8 @@ size_t makePacket(void* buffer, size_t size)
 }
 ```
 
-Now given a suitable packet transport (e.g. a UDP socket or an in-memory FIFO,
-see below for a dummy implementation), a packet can be constructed and sent as
-follows:
+Given a transport (e.g. a UDP socket or in-memory FIFO; see the appendix for a
+minimal implementation), sending a packet looks like this:
 
 ```cpp
 class Transport;
@@ -115,7 +109,7 @@ void sendPacket(Transport* t, void* buffer, size_t bufferSize)
 }
 ```
 
-When parsing data from OSC packets you have to handle the two distinct cases of bundles and messages:
+Parsing requires handling two cases — bundles and messages:
 
 ```cpp
 #include <oscpp/server.hpp>
@@ -181,8 +175,7 @@ void handlePacket(const OSCPP::Server::Packet& packet)
 }
 ```
 
-Now we can receive data from a message based transport and pass it to our
-packet handling function:
+Receiving from a message-based transport:
 
 ```cpp
 #include <array>
@@ -199,7 +192,7 @@ void recvPacket(Transport* t)
 }
 ```
 
-Here's our code in an example main function:
+Putting it together:
 
 ```cpp
 #include <memory>
