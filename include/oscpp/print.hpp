@@ -1,4 +1,4 @@
-// OSCpp library
+// oscpp library
 //
 // Copyright (c) 2004-2011 Stefan Kersten <sk@k-hornz.de>
 //
