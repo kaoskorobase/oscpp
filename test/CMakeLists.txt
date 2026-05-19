@@ -16,13 +16,14 @@ FetchContent_MakeAvailable(Catch2 rapidcheck)
 add_subdirectory(${rapidcheck_SOURCE_DIR}/extras/catch
                  ${CMAKE_CURRENT_BINARY_DIR}/rapidcheck_catch)
 
-set(oscpp_warnings -Wall -Wextra -Wno-unused-parameter -Werror)
+set(oscpp_warnings -Wall -Wextra -Wno-unused-parameter)
 
 add_executable(oscpp_autocheck oscpp_autocheck.cpp)
 target_link_libraries(oscpp_autocheck PRIVATE
     oscpp::oscpp Catch2::Catch2WithMain rapidcheck rapidcheck_catch)
 target_compile_options(oscpp_autocheck PRIVATE
     "$<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:${oscpp_warnings}>")
+set_target_properties(oscpp_autocheck PROPERTIES COMPILE_WARNING_AS_ERROR ON)
 include(Catch)
 catch_discover_tests(oscpp_autocheck)
 
@@ -38,4 +39,5 @@ add_executable(oscpp_readme ${CMAKE_CURRENT_BINARY_DIR}/README.cpp)
 target_include_directories(oscpp_readme PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_options(oscpp_readme PRIVATE
     "$<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:${oscpp_warnings}>")
+set_target_properties(oscpp_readme PROPERTIES COMPILE_WARNING_AS_ERROR ON)
 add_test(NAME oscpp_readme COMMAND oscpp_readme)

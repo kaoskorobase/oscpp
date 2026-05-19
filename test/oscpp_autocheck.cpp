@@ -639,7 +639,6 @@ TEST_CASE("prop_overflow")
     rc::prop("overflow throws OverflowError for undersized buffer",
         [](std::shared_ptr<OSCPP::AST::Packet> packet, size_t inBufferSize) {
             const size_t packetSize = packet->size();
-            RC_PRE(packetSize > 0U);
             const size_t bufferSize =
                 inBufferSize == 0
                     ? 1
