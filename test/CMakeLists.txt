@@ -3,10 +3,12 @@ include(FetchContent)
 FetchContent_Declare(Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG        v3.8.1
+    GIT_SHALLOW    TRUE
 )
 FetchContent_Declare(rapidcheck
     GIT_REPOSITORY https://github.com/emil-e/rapidcheck.git
     GIT_TAG        b2d9ed2dddefc4b84318d664b4f221eb792d89c7
+    GIT_SHALLOW    TRUE
 )
 # RC_ENABLE_CATCH also pulls in rapidcheck's bundled Catch v2 (ext/catch), which
 # conflicts with the FetchContent'd Catch2 v3. Keep it OFF and add the

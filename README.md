@@ -1,3 +1,5 @@
+[![CI](https://github.com/kaoskorobase/oscpp/actions/workflows/ci.yml/badge.svg)](https://github.com/kaoskorobase/oscpp/actions/workflows/ci.yml)
+
 **oscpp** is a header-only C++11 library for constructing and parsing
 [OpenSoundControl](http://opensoundcontrol.org) packets. Supported platforms
 are MacOS X, iOS, Linux, Android and Windows; the code should be easily
