@@ -663,3 +663,19 @@ TEST_CASE("prop_overflow")
             RC_ASSERT(threw);
         });
 }
+
+TEST_CASE("tag_string_overflow_message")
+{
+    // Buffer large enough for address but not for tag string
+    char   buf[8];
+    OSCPP::Client::Packet p(buf, sizeof(buf));
+    try
+    {
+        p.openMessage("/x", 10); // 10 tags won't fit in 8 bytes
+        FAIL("Expected OverflowError");
+    }
+    catch (OSCPP::OverflowError& e)
+    {
+        REQUIRE(std::string(e.what()).find("Tag string overflow") != std::string::npos);
+    }
+}

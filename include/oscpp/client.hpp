@@ -203,7 +203,11 @@ public:
         }
         m_args.putString(addr);
         size_t sigLen = numTags + 2;
-        m_tags = WriteStream(m_args, sigLen);
+        try {
+            m_tags = WriteStream(m_args, sigLen);
+        } catch (UnderrunError&) {
+            throw OverflowError(sigLen - m_args.consumable(), "Tag string overflow");
+        }
         m_args.zero(align(sigLen));
         m_tags.putChar(',');
         return *this;

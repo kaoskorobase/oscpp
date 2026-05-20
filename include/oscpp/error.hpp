@@ -52,16 +52,17 @@ private:
 class UnderrunError : public Error
 {
 public:
-    UnderrunError()
-    : Error(std::string("Buffer underrun"))
+    UnderrunError(const std::string& what = "Buffer underrun")
+    : Error(what)
     {}
 };
 
 class OverflowError : public Error
 {
 public:
-    OverflowError(size_t bytes)
-    : Error(std::string("Buffer overflow"))
+    OverflowError(size_t bytes,
+                  const std::string& what = "Buffer overflow")
+    : Error(what + " (" + std::to_string(bytes) + " bytes)")
     , m_bytes(bytes)
     {}
 
