@@ -1,6 +1,6 @@
 // oscpp library
 //
-// Copyright (c) 2004-2013 Stefan Kersten <sk@k-hornz.de>
+// Copyright (c) 2004-2018 Stefan Kersten <kaoskorobase@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person or organization
 // obtaining a copy of the software and accompanying documentation covered by
